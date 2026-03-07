@@ -1,57 +1,55 @@
-import { notFound } from 'next/navigation';
 import MenuTracker from '@/components/MenuTracker';
 import MenuClient from './MenuClient';
 
 export const dynamic = 'force-dynamic';
 
 async function getMenuData(slug) {
-  try {
-    const response = await fetch(
-      `https://easydishmenu.com/wp-json/qrmenu/v1/menu/${slug}`,
-      { cache: 'no-store' }
-    );
+  const url = `https://easydishmenu.com/wp-json/qrmenu/v1/menu/${slug}`;
 
-    if (!response.ok) {
-      return null;
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    const text = await response.text();
+
+    let json = null;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      json = null;
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching menu:', error);
-    return null;
-  }
-}
-
-export async function generateMetadata({ params }) {
-  const menuData = await getMenuData(params.slug);
-
-  if (!menuData) {
     return {
-      title: 'Menú no encontrado'
+      ok: response.ok,
+      status: response.status,
+      url,
+      text,
+      json,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      url,
+      text: String(error),
+      json: null,
     };
   }
-
-  return {
-    title: `${menuData.restaurant.name} - Menú Digital`,
-    description: `Menú digital de ${menuData.restaurant.name}. Consulta nuestros platos, precios y alérgenos.`,
-    openGraph: {
-      title: `${menuData.restaurant.name} - Menú Digital`,
-      description: `Menú digital de ${menuData.restaurant.name}`,
-    }
-  };
 }
 
 export default async function MenuPage({ params }) {
-  const menuData = await getMenuData(params.slug);
+  const result = await getMenuData(params.slug);
 
-  if (!menuData) {
-    notFound();
+  if (!result.ok || !result.json || !result.json.restaurant) {
+    return (
+      <pre style={{ whiteSpace: 'pre-wrap', padding: '20px' }}>
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    );
   }
 
   return (
     <>
-      <MenuTracker restaurantId={menuData.restaurant.id} />
-      <MenuClient menuData={menuData} />
+      <MenuTracker restaurantId={result.json.restaurant.id} />
+      <MenuClient menuData={result.json} />
     </>
   );
 }
