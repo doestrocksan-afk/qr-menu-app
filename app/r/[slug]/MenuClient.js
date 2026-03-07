@@ -5,9 +5,7 @@ import { useState, useEffect } from 'react';
 export default function MenuClient({ menuData }) {
   const [language, setLanguage] = useState('es');
   const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
 
   const { restaurant, categories } = menuData;
 
@@ -39,13 +37,6 @@ export default function MenuClient({ menuData }) {
     setSelectedItem(null);
   };
 
-  const openCategory = (categoryId, categoryName) => {
-    setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
-    if (window.menuTracker) {
-      window.menuTracker.categoryOpen(categoryId, categoryName);
-    }
-  };
-
   const openGoogleReview = () => {
     if (window.menuTracker) {
       window.menuTracker.reviewClick();
@@ -70,339 +61,215 @@ export default function MenuClient({ menuData }) {
       })).filter(cat => cat.items.length > 0)
     : categories;
 
-  const totalItems = filteredCategories.reduce((sum, cat) => sum + cat.items.length, 0);
+  const getText = (key) => {
+    const texts = {
+      search: { es: 'Buscar platos...', en: 'Search dishes...', fr: 'Rechercher...' },
+      noResults: { es: 'No se encontraron platos', en: 'No dishes found', fr: 'Aucun plat trouvé' },
+      information: { es: 'Información', en: 'Information', fr: 'Informations' },
+      restaurant: { es: 'Restaurante', en: 'Restaurant', fr: 'Restaurant' },
+      phone: { es: 'Teléfono', en: 'Phone', fr: 'Téléphone' },
+      address: { es: 'Dirección', en: 'Address', fr: 'Adresse' },
+      allergens: { es: 'Alérgenos', en: 'Allergens', fr: 'Allergènes' },
+      rateUs: { es: 'Valóranos', en: 'Rate us', fr: 'Évaluez-nous' }
+    };
+    return texts[key]?.[language] || texts[key]?.es || '';
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Header Sticky con efecto glassmorphism */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200/60 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          {/* Nombre del restaurante con gradiente */}
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
-                {restaurant.name}
-              </h1>
-              {restaurant.address && (
-                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
-                  </svg>
-                  {restaurant.address.split('\n')[0]}
-                </p>
-              )}
-            </div>
-            
-            {/* Selector de idioma mejorado */}
-            <div className="relative">
-              <select 
-                value={language}
-                onChange={(e) => changeLanguage(e.target.value)}
-                className="appearance-none bg-gradient-to-r from-violet-50 to-indigo-50 border-2 border-violet-200 text-violet-700 font-semibold px-4 py-2 pr-10 rounded-xl cursor-pointer transition-all hover:border-violet-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
-              >
-                <option value="es">🇪🇸 ES</option>
-                <option value="en">🇬🇧 EN</option>
-                <option value="fr">🇫🇷 FR</option>
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-violet-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Buscador mejorado */}
-          <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-              {isSearching ? (
-                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              )}
-            </div>
-            <input
-              type="text"
-              placeholder={language === 'es' ? 'Buscar platos...' : language === 'en' ? 'Search dishes...' : 'Rechercher...'}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setIsSearching(true);
-                setTimeout(() => setIsSearching(false), 300);
-              }}
-              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition-all placeholder:text-slate-400"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+    <div style={styles.container}>
+      {/* Header */}
+      <header style={styles.header}>
+        <div style={styles.headerContent}>
+          {/* Título */}
+          <div style={styles.titleSection}>
+            <h1 style={styles.title}>{restaurant.name}</h1>
+            {restaurant.address && (
+              <p style={styles.subtitle}>
+                <span style={styles.locationIcon}>📍</span>
+                {restaurant.address.split('\n')[0]}
+              </p>
             )}
           </div>
+          
+          {/* Selector de idioma */}
+          <select 
+            value={language}
+            onChange={(e) => changeLanguage(e.target.value)}
+            style={styles.languageSelector}
+          >
+            <option value="es">🇪🇸 ES</option>
+            <option value="en">🇬🇧 EN</option>
+            <option value="fr">🇫🇷 FR</option>
+          </select>
+        </div>
 
-          {/* Contador de resultados */}
+        {/* Buscador */}
+        <div style={styles.searchContainer}>
+          <span style={styles.searchIcon}>🔍</span>
+          <input
+            type="text"
+            placeholder={getText('search')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={styles.searchInput}
+          />
           {searchQuery && (
-            <p className="text-sm text-slate-600 mt-2 animate-fade-in">
-              {totalItems === 0 
-                ? (language === 'es' ? 'No se encontraron platos' : language === 'en' ? 'No dishes found' : 'Aucun plat trouvé')
-                : `${totalItems} ${totalItems === 1 ? (language === 'es' ? 'plato' : language === 'en' ? 'dish' : 'plat') : (language === 'es' ? 'platos' : language === 'en' ? 'dishes' : 'plats')}`
-              }
-            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              style={styles.clearButton}
+            >
+              ✕
+            </button>
           )}
         </div>
       </header>
 
-      {/* Menú principal */}
-      <main className="max-w-4xl mx-auto px-4 py-6 pb-32">
+      {/* Contenido principal */}
+      <main style={styles.main}>
         {filteredCategories.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <p className="text-slate-500 text-lg">
-              {language === 'es' ? 'No se encontraron platos' : language === 'en' ? 'No dishes found' : 'Aucun plat trouvé'}
-            </p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="mt-4 text-violet-600 hover:text-violet-700 font-medium"
-            >
-              {language === 'es' ? 'Limpiar búsqueda' : language === 'en' ? 'Clear search' : 'Effacer la recherche'}
+          <div style={styles.emptyState}>
+            <p style={styles.emptyText}>{getText('noResults')}</p>
+            <button onClick={() => setSearchQuery('')} style={styles.clearSearchButton}>
+              Limpiar búsqueda
             </button>
           </div>
         ) : (
-          filteredCategories.map((category, idx) => (
-            <section key={category.id} className="mb-8 animate-fade-in-up" style={{animationDelay: `${idx * 100}ms`}}>
-              {/* Categoría con efecto acordeón */}
-              <button
-                onClick={() => openCategory(category.id, category.name[language] || category.name.es)}
-                className="w-full group"
-              >
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-2xl shadow-md hover:shadow-lg transition-all mb-4">
-                  <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
-                    <span className="w-6 h-6 flex-shrink-0">{getCategoryIcon(idx)}</span>
-                    {category.name[language] || category.name.es}
-                    <span className="text-sm font-normal opacity-90">({category.items.length})</span>
-                  </h2>
-                  <svg 
-                    className={`w-6 h-6 text-white transition-transform ${selectedCategory === category.id ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+          filteredCategories.map((category) => (
+            <section key={category.id} style={styles.categorySection}>
+              {/* Título de categoría */}
+              <h2 style={styles.categoryTitle}>
+                {category.name[language] || category.name.es}
+              </h2>
+
+              {/* Items */}
+              <div style={styles.itemsGrid}>
+                {category.items.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => openItem(item, category.id)}
+                    style={styles.itemCard}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </button>
-
-              {/* Items de la categoría */}
-              <div className={`grid gap-4 transition-all duration-300 ${selectedCategory === category.id || searchQuery ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 overflow-hidden'}`}>
-                <div className="overflow-hidden">
-                  {category.items.map((item, itemIdx) => (
-                    <div
-                      key={item.id}
-                      onClick={() => openItem(item, category.id)}
-                      className="mb-4 last:mb-0 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden border-2 border-transparent hover:border-violet-200 group animate-scale-in"
-                      style={{animationDelay: `${itemIdx * 50}ms`}}
-                    >
-                      <div className="flex gap-4 p-4">
-                        {/* Imagen con efecto zoom */}
-                        {item.image_url && (
-                          <div className="flex-shrink-0 relative overflow-hidden rounded-xl">
-                            <img
-                              src={item.image_url}
-                              alt={item.name[language] || item.name.es}
-                              className="w-28 h-28 md:w-32 md:h-32 object-cover group-hover:scale-110 transition-transform duration-300"
-                            />
-                            {/* Overlay gradiente */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                          </div>
-                        )}
-
-                        {/* Info del plato */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start gap-2 mb-2">
-                            <h3 className="font-bold text-slate-900 text-lg md:text-xl leading-tight">
-                              {item.name[language] || item.name.es}
-                            </h3>
-                            <div className="flex-shrink-0 bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-3 py-1 rounded-full font-bold text-lg shadow-md">
-                              {item.price.toFixed(2)}€
-                            </div>
-                          </div>
-
-                          {item.description[language] && (
-                            <p className="text-slate-600 text-sm md:text-base line-clamp-2 mb-2 leading-relaxed">
-                              {item.description[language]}
-                            </p>
-                          )}
-
-                          {/* Alérgenos como badges */}
-                          {item.allergens && item.allergens.length > 0 && (
-                            <div className="flex gap-1.5 flex-wrap">
-                              {item.allergens.slice(0, 3).map((allergen, idx) => (
-                                <span
-                                  key={idx}
-                                  className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full font-medium border border-amber-200 flex items-center gap-1"
-                                >
-                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                                  </svg>
-                                  {allergen.trim()}
-                                </span>
-                              ))}
-                              {item.allergens.length > 3 && (
-                                <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium">
-                                  +{item.allergens.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Flecha indicadora */}
-                        <div className="flex-shrink-0 self-center text-slate-300 group-hover:text-violet-500 transition-colors">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
+                    {/* Imagen */}
+                    {item.image_url && (
+                      <div style={styles.imageContainer}>
+                        <img
+                          src={item.image_url}
+                          alt={item.name[language] || item.name.es}
+                          style={styles.itemImage}
+                        />
                       </div>
+                    )}
+
+                    {/* Info */}
+                    <div style={styles.itemContent}>
+                      <div style={styles.itemHeader}>
+                        <h3 style={styles.itemName}>
+                          {item.name[language] || item.name.es}
+                        </h3>
+                        <span style={styles.itemPrice}>
+                          {item.price.toFixed(2)}€
+                        </span>
+                      </div>
+
+                      {item.description[language] && (
+                        <p style={styles.itemDescription}>
+                          {item.description[language]}
+                        </p>
+                      )}
+
+                      {/* Alérgenos */}
+                      {item.allergens && item.allergens.length > 0 && (
+                        <div style={styles.allergensContainer}>
+                          {item.allergens.slice(0, 3).map((allergen, idx) => (
+                            <span key={idx} style={styles.allergenBadge}>
+                              ⚠ {allergen.trim()}
+                            </span>
+                          ))}
+                          {item.allergens.length > 3 && (
+                            <span style={styles.allergenMore}>
+                              +{item.allergens.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </section>
           ))
         )}
       </main>
 
-      {/* Botones flotantes mejorados */}
-      <div className="fixed bottom-6 right-4 flex flex-col gap-3 z-40">
-        {/* Botón de info */}
+      {/* Botones flotantes */}
+      <div style={styles.floatingButtons}>
+        {/* Botón Info */}
         <button
           onClick={() => setSelectedItem('info')}
-          className="bg-slate-700 hover:bg-slate-800 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95"
-          title={language === 'es' ? 'Información' : language === 'en' ? 'Information' : 'Informations'}
+          style={styles.infoButton}
+          title={getText('information')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          ℹ️
         </button>
 
-        {/* Botón de reseñas */}
+        {/* Botón Reseñas */}
         {restaurant.google_place_id && (
           <button
             onClick={openGoogleReview}
-            className="bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white px-5 py-3 rounded-full shadow-2xl font-semibold flex items-center gap-2 transition-all hover:scale-110 active:scale-95"
+            style={styles.reviewButton}
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="hidden sm:inline">
-              {language === 'es' ? 'Valóranos' : language === 'en' ? 'Rate us' : 'Évaluez-nous'}
-            </span>
+            ⭐ {getText('rateUs')}
           </button>
         )}
       </div>
 
-      {/* Modal de plato mejorado */}
+      {/* Modal de plato */}
       {selectedItem && selectedItem !== 'info' && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4 animate-fade-in"
-          onClick={closeItem}
-        >
-          <div
-            className="bg-white rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Imagen destacada */}
+        <div style={styles.modalOverlay} onClick={closeItem}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            {/* Imagen */}
             {selectedItem.image_url && (
-              <div className="relative h-72 overflow-hidden">
+              <div style={styles.modalImageContainer}>
                 <img
                   src={selectedItem.image_url}
                   alt={selectedItem.name[language] || selectedItem.name.es}
-                  className="w-full h-full object-cover"
+                  style={styles.modalImage}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                
-                {/* Botón cerrar sobre la imagen */}
-                <button
-                  onClick={closeItem}
-                  className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-lg"
-                >
-                  <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
             )}
 
-            <div className="p-6 sm:p-8">
-              {/* Header del modal sin imagen */}
-              {!selectedItem.image_url && (
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-3xl font-bold text-slate-900 pr-4">
-                    {selectedItem.name[language] || selectedItem.name.es}
-                  </h2>
-                  <button
-                    onClick={closeItem}
-                    className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition-all flex-shrink-0"
-                  >
-                    <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )}
+            <div style={styles.modalBody}>
+              {/* Botón cerrar */}
+              <button onClick={closeItem} style={styles.closeButton}>
+                ✕
+              </button>
 
-              {/* Título si hay imagen */}
-              {selectedItem.image_url && (
-                <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                  {selectedItem.name[language] || selectedItem.name.es}
-                </h2>
-              )}
+              {/* Título */}
+              <h2 style={styles.modalTitle}>
+                {selectedItem.name[language] || selectedItem.name.es}
+              </h2>
 
-              {/* Precio destacado */}
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-6 py-3 rounded-2xl mb-6 shadow-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-3xl font-bold">{selectedItem.price.toFixed(2)}€</span>
+              {/* Precio */}
+              <div style={styles.modalPrice}>
+                {selectedItem.price.toFixed(2)}€
               </div>
 
               {/* Descripción */}
               {selectedItem.description[language] && (
-                <div className="mb-6">
-                  <p className="text-slate-700 text-lg leading-relaxed">
-                    {selectedItem.description[language]}
-                  </p>
-                </div>
+                <p style={styles.modalDescription}>
+                  {selectedItem.description[language]}
+                </p>
               )}
 
-              {/* Alérgenos detallados */}
+              {/* Alérgenos */}
               {selectedItem.allergens && selectedItem.allergens.length > 0 && (
-                <div className="border-t border-slate-200 pt-6">
-                  <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-lg">
-                    <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                    </svg>
-                    {language === 'es' ? 'Alérgenos' : language === 'en' ? 'Allergens' : 'Allergènes'}
+                <div style={styles.modalAllergens}>
+                  <h3 style={styles.modalAllergensTitle}>
+                    ⚠️ {getText('allergens')}
                   </h3>
-                  <div className="flex gap-2 flex-wrap">
+                  <div style={styles.modalAllergensList}>
                     {selectedItem.allergens.map((allergen, idx) => (
-                      <span
-                        key={idx}
-                        className="px-4 py-2 bg-amber-50 text-amber-800 rounded-xl font-medium border-2 border-amber-200"
-                      >
+                      <span key={idx} style={styles.modalAllergenBadge}>
                         {allergen.trim()}
                       </span>
                     ))}
@@ -414,195 +281,454 @@ export default function MenuClient({ menuData }) {
         </div>
       )}
 
-      {/* Modal de info mejorado */}
+      {/* Modal de info */}
       {selectedItem === 'info' && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4 animate-fade-in"
-          onClick={() => setSelectedItem(null)}
-        >
-          <div
-            className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-6 sm:p-8 animate-slide-up shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
-                {language === 'es' ? 'Información' : language === 'en' ? 'Information' : 'Informations'}
-              </h2>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition-all"
-              >
-                <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+        <div style={styles.modalOverlay} onClick={() => setSelectedItem(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalBody}>
+              {/* Botón cerrar */}
+              <button onClick={() => setSelectedItem(null)} style={styles.closeButton}>
+                ✕
               </button>
-            </div>
 
-            <div className="space-y-5">
-              {/* Nombre */}
-              <div className="flex gap-4 p-4 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-2xl">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
+              <h2 style={styles.modalTitle}>{getText('information')}</h2>
+
+              <div style={styles.infoList}>
+                {/* Nombre */}
+                <div style={styles.infoItem}>
+                  <div style={styles.infoIcon}>🏪</div>
+                  <div>
+                    <div style={styles.infoLabel}>{getText('restaurant')}</div>
+                    <div style={styles.infoValue}>{restaurant.name}</div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-600 text-sm mb-1">
-                    {language === 'es' ? 'Restaurante' : language === 'en' ? 'Restaurant' : 'Restaurant'}
-                  </h3>
-                  <p className="text-slate-900 font-bold text-lg">{restaurant.name}</p>
-                </div>
+
+                {/* Teléfono */}
+                {restaurant.phone && (
+                  <div style={styles.infoItem}>
+                    <div style={styles.infoIcon}>📞</div>
+                    <div>
+                      <div style={styles.infoLabel}>{getText('phone')}</div>
+                      <a href={`tel:${restaurant.phone}`} style={styles.infoLink}>
+                        {restaurant.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dirección */}
+                {restaurant.address && (
+                  <div style={styles.infoItem}>
+                    <div style={styles.infoIcon}>📍</div>
+                    <div>
+                      <div style={styles.infoLabel}>{getText('address')}</div>
+                      <div style={styles.infoValue}>{restaurant.address}</div>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Teléfono */}
-              {restaurant.phone && (
-                <div className="flex gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl">
-                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-600 text-sm mb-1">
-                      {language === 'es' ? 'Teléfono' : language === 'en' ? 'Phone' : 'Téléphone'}
-                    </h3>
-                    <a href={`tel:${restaurant.phone}`} className="text-green-700 hover:text-green-800 font-bold text-lg">
-                      {restaurant.phone}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Dirección */}
-              {restaurant.address && (
-                <div className="flex gap-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl">
-                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-600 text-sm mb-1">
-                      {language === 'es' ? 'Dirección' : language === 'en' ? 'Address' : 'Adresse'}
-                    </h3>
-                    <p className="text-slate-900 font-medium leading-relaxed">{restaurant.address}</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
       )}
-
-      {/* Estilos de animaciones */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        @keyframes scale-in {
-          from {
-            transform: scale(0.95);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 0.5s ease-out backwards;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-
-        .animate-scale-in {
-          animation: scale-in 0.3s ease-out backwards;
-        }
-
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
     </div>
   );
 }
 
-function getCategoryIcon(index) {
-  const icons = [
-    // Ensalada
-    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
-      <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
-    </svg>,
-    // Plato
-    <svg key={index} fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
-      <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-      <circle cx="12" cy="12" r="6" strokeWidth="2"/>
-    </svg>,
-    // Postre/pastel
-    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
-      <path d="M6 3a1 1 0 011-1h.01a1 1 0 010 2H7a1 1 0 01-1-1zm2 3a1 1 0 00-2 0v1a2 2 0 00-2 2v1a2 2 0 00-2 2v.683a3.7 3.7 0 011.055.485 1.704 1.704 0 001.89 0 3.704 3.704 0 014.11 0 1.704 1.704 0 001.89 0 3.704 3.704 0 014.11 0 1.704 1.704 0 001.89 0A3.7 3.7 0 0118 12.683V12a2 2 0 00-2-2V9a2 2 0 00-2-2V6a1 1 0 10-2 0v1h-1V6a1 1 0 10-2 0v1H8V6zm10 8.868a3.704 3.704 0 01-4.055-.036 1.704 1.704 0 00-1.89 0 3.704 3.704 0 01-4.11 0 1.704 1.704 0 00-1.89 0A3.704 3.704 0 012 14.868V17a1 1 0 001 1h14a1 1 0 001-1v-2.132zM9 3a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm3 0a1 1 0 011-1h.01a1 1 0 110 2H13a1 1 0 01-1-1z"/>
-    </svg>,
-    // Bebida
-    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
-      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" clipRule="evenodd"/>
-    </svg>,
-    // Pizza
-    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
-      <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM7 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm5.5.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm-4 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-    </svg>,
-    // Sopa/cuenco
-    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
-      <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/>
-      <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/>
-      <path d="M17 5c0-1.657-3.134-3-7-3S3 3.343 3 5s3.134 3 7 3 7-1.343 7-3z"/>
-    </svg>,
-    // Caja de comida
-    <svg key={index} fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-    </svg>,
-    // Taco/comida rápida
-    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd"/>
-    </svg>
-  ];
-  return icons[index % icons.length];
+// Estilos inline para control total del tamaño
+const styles = {
+  container: {
+    minHeight: '100vh',
+    backgroundColor: '#f8fafc',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  header: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderBottom: '1px solid #e2e8f0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  headerContent: {
+    maxWidth: '1024px',
+    margin: '0 auto',
+    padding: '16px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '16px',
+  },
+  titleSection: {
+    flex: 1,
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#1e293b',
+    margin: '0 0 4px 0',
+  },
+  subtitle: {
+    fontSize: '12px',
+    color: '#64748b',
+    margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  locationIcon: {
+    fontSize: '12px',
+  },
+  languageSelector: {
+    padding: '8px 12px',
+    borderRadius: '8px',
+    border: '2px solid #e2e8f0',
+    backgroundColor: 'white',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#475569',
+    cursor: 'pointer',
+    outline: 'none',
+  },
+  searchContainer: {
+    maxWidth: '1024px',
+    margin: '0 auto',
+    padding: '0 16px 16px 16px',
+    position: 'relative',
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '28px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    fontSize: '16px',
+    pointerEvents: 'none',
+  },
+  searchInput: {
+    width: '100%',
+    padding: '12px 40px 12px 44px',
+    borderRadius: '12px',
+    border: '2px solid #e2e8f0',
+    fontSize: '15px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+  },
+  clearButton: {
+    position: 'absolute',
+    right: '28px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    fontSize: '18px',
+    color: '#94a3b8',
+    cursor: 'pointer',
+    padding: '4px',
+  },
+  main: {
+    maxWidth: '1024px',
+    margin: '0 auto',
+    padding: '24px 16px 120px 16px',
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '80px 20px',
+  },
+  emptyText: {
+    fontSize: '18px',
+    color: '#64748b',
+    marginBottom: '16px',
+  },
+  clearSearchButton: {
+    padding: '10px 20px',
+    borderRadius: '8px',
+    border: 'none',
+    backgroundColor: '#6366f1',
+    color: 'white',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+  },
+  categorySection: {
+    marginBottom: '40px',
+  },
+  categoryTitle: {
+    fontSize: '22px',
+    fontWeight: 'bold',
+    color: '#1e293b',
+    margin: '0 0 16px 0',
+    paddingBottom: '8px',
+    borderBottom: '3px solid #6366f1',
+    display: 'inline-block',
+  },
+  itemsGrid: {
+    display: 'grid',
+    gap: '16px',
+  },
+  itemCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    gap: '16px',
+  },
+  imageContainer: {
+    width: '120px',
+    height: '120px',
+    flexShrink: 0,
+    overflow: 'hidden',
+  },
+  itemImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  itemContent: {
+    flex: 1,
+    padding: '16px 16px 16px 0',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  itemHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '12px',
+    marginBottom: '8px',
+  },
+  itemName: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#1e293b',
+    margin: 0,
+    flex: 1,
+  },
+  itemPrice: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#6366f1',
+    flexShrink: 0,
+  },
+  itemDescription: {
+    fontSize: '14px',
+    color: '#64748b',
+    margin: '0 0 12px 0',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    lineHeight: '1.5',
+  },
+  allergensContainer: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'wrap',
+    marginTop: 'auto',
+  },
+  allergenBadge: {
+    fontSize: '11px',
+    padding: '4px 8px',
+    borderRadius: '12px',
+    backgroundColor: '#fef3c7',
+    color: '#92400e',
+    fontWeight: '600',
+  },
+  allergenMore: {
+    fontSize: '11px',
+    padding: '4px 8px',
+    borderRadius: '12px',
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  floatingButtons: {
+    position: 'fixed',
+    bottom: '24px',
+    right: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    zIndex: 40,
+  },
+  infoButton: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    border: 'none',
+    backgroundColor: '#334155',
+    color: 'white',
+    fontSize: '20px',
+    cursor: 'pointer',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    transition: 'transform 0.2s',
+  },
+  reviewButton: {
+    padding: '12px 20px',
+    borderRadius: '24px',
+    border: 'none',
+    backgroundColor: '#6366f1',
+    color: 'white',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    transition: 'transform 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 100,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: '20px',
+    maxWidth: '600px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
+  },
+  modalImageContainer: {
+    width: '100%',
+    height: '300px',
+    overflow: 'hidden',
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  modalBody: {
+    padding: '24px',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: '24px',
+    right: '24px',
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    border: 'none',
+    backgroundColor: '#f1f5f9',
+    fontSize: '18px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: '28px',
+    fontWeight: 'bold',
+    color: '#1e293b',
+    margin: '0 40px 16px 0',
+  },
+  modalPrice: {
+    fontSize: '32px',
+    fontWeight: 'bold',
+    color: '#6366f1',
+    marginBottom: '16px',
+  },
+  modalDescription: {
+    fontSize: '16px',
+    color: '#475569',
+    lineHeight: '1.6',
+    marginBottom: '24px',
+  },
+  modalAllergens: {
+    borderTop: '1px solid #e2e8f0',
+    paddingTop: '24px',
+  },
+  modalAllergensTitle: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: '12px',
+  },
+  modalAllergensList: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+  },
+  modalAllergenBadge: {
+    padding: '8px 16px',
+    borderRadius: '16px',
+    backgroundColor: '#fef3c7',
+    color: '#92400e',
+    fontSize: '14px',
+    fontWeight: '600',
+    border: '2px solid #fde68a',
+  },
+  infoList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+  infoItem: {
+    display: 'flex',
+    gap: '16px',
+    padding: '16px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+  },
+  infoIcon: {
+    fontSize: '24px',
+    flexShrink: 0,
+  },
+  infoLabel: {
+    fontSize: '12px',
+    color: '#64748b',
+    fontWeight: '600',
+    marginBottom: '4px',
+    textTransform: 'uppercase',
+  },
+  infoValue: {
+    fontSize: '16px',
+    color: '#1e293b',
+    fontWeight: '600',
+  },
+  infoLink: {
+    fontSize: '16px',
+    color: '#6366f1',
+    fontWeight: '600',
+    textDecoration: 'none',
+  },
+};
+
+// Media queries para responsive
+if (typeof window !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @media (hover: hover) {
+      .item-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15) !important;
+      }
+      .floating-button:hover {
+        transform: scale(1.1);
+      }
+    }
+    @media (max-width: 640px) {
+      .modal-content {
+        border-radius: 20px 20px 0 0 !important;
+        align-self: flex-end !important;
+      }
+    }
+  `;
+  if (document.head) {
+    document.head.appendChild(style);
+  }
 }
