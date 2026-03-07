@@ -85,7 +85,7 @@ export default function MenuClient({ menuData }) {
               </h1>
               {restaurant.address && (
                 <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                  <span>📍</span> {restaurant.address.split('\n')[0]}
+                  <span className="text-xs leading-none">📍</span> {restaurant.address.split('\n')[0]}
                 </p>
               )}
             </div>
@@ -187,7 +187,7 @@ export default function MenuClient({ menuData }) {
               >
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-2xl shadow-md hover:shadow-lg transition-all mb-4">
                   <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
-                    <span className="text-2xl">{getCategoryIcon(idx)}</span>
+                    <span className="text-xl leading-none">{getCategoryIcon(idx)}</span>
                     {category.name[language] || category.name.es}
                     <span className="text-sm font-normal opacity-90">({category.items.length})</span>
                   </h2>
@@ -251,7 +251,7 @@ export default function MenuClient({ menuData }) {
                                   key={idx}
                                   className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full font-medium border border-amber-200"
                                 >
-                                  ⚠️ {allergen.trim()}
+                                  <span className="text-xs">⚠️</span> {allergen.trim()}
                                 </span>
                               ))}
                               {item.allergens.length > 3 && (
@@ -386,7 +386,7 @@ export default function MenuClient({ menuData }) {
               {selectedItem.allergens && selectedItem.allergens.length > 0 && (
                 <div className="border-t border-slate-200 pt-6">
                   <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-lg">
-                    <span>⚠️</span>
+                    <span className="text-base leading-none">⚠️</span>
                     {language === 'es' ? 'Alérgenos' : language === 'en' ? 'Allergens' : 'Allergènes'}
                   </h3>
                   <div className="flex gap-2 flex-wrap">
