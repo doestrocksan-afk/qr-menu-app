@@ -85,7 +85,10 @@ export default function MenuClient({ menuData }) {
               </h1>
               {restaurant.address && (
                 <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                  <span className="text-xs leading-none">📍</span> {restaurant.address.split('\n')[0]}
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
+                  </svg>
+                  {restaurant.address.split('\n')[0]}
                 </p>
               )}
             </div>
@@ -187,7 +190,7 @@ export default function MenuClient({ menuData }) {
               >
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-2xl shadow-md hover:shadow-lg transition-all mb-4">
                   <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
-                    <span className="text-xl leading-none">{getCategoryIcon(idx)}</span>
+                    <span className="w-6 h-6 flex-shrink-0">{getCategoryIcon(idx)}</span>
                     {category.name[language] || category.name.es}
                     <span className="text-sm font-normal opacity-90">({category.items.length})</span>
                   </h2>
@@ -249,9 +252,12 @@ export default function MenuClient({ menuData }) {
                               {item.allergens.slice(0, 3).map((allergen, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full font-medium border border-amber-200"
+                                  className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full font-medium border border-amber-200 flex items-center gap-1"
                                 >
-                                  <span className="text-xs">⚠️</span> {allergen.trim()}
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                                  </svg>
+                                  {allergen.trim()}
                                 </span>
                               ))}
                               {item.allergens.length > 3 && (
@@ -386,7 +392,9 @@ export default function MenuClient({ menuData }) {
               {selectedItem.allergens && selectedItem.allergens.length > 0 && (
                 <div className="border-t border-slate-200 pt-6">
                   <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-lg">
-                    <span className="text-base leading-none">⚠️</span>
+                    <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                    </svg>
                     {language === 'es' ? 'Alérgenos' : language === 'en' ? 'Allergens' : 'Allergènes'}
                   </h3>
                   <div className="flex gap-2 flex-wrap">
@@ -559,6 +567,42 @@ export default function MenuClient({ menuData }) {
 }
 
 function getCategoryIcon(index) {
-  const icons = ['🥗', '🍽️', '🍰', '🥤', '🍕', '🍜', '🍱', '🌮'];
+  const icons = [
+    // Ensalada
+    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
+      <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+    </svg>,
+    // Plato
+    <svg key={index} fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+      <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+      <circle cx="12" cy="12" r="6" strokeWidth="2"/>
+    </svg>,
+    // Postre/pastel
+    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
+      <path d="M6 3a1 1 0 011-1h.01a1 1 0 010 2H7a1 1 0 01-1-1zm2 3a1 1 0 00-2 0v1a2 2 0 00-2 2v1a2 2 0 00-2 2v.683a3.7 3.7 0 011.055.485 1.704 1.704 0 001.89 0 3.704 3.704 0 014.11 0 1.704 1.704 0 001.89 0 3.704 3.704 0 014.11 0 1.704 1.704 0 001.89 0A3.7 3.7 0 0118 12.683V12a2 2 0 00-2-2V9a2 2 0 00-2-2V6a1 1 0 10-2 0v1h-1V6a1 1 0 10-2 0v1H8V6zm10 8.868a3.704 3.704 0 01-4.055-.036 1.704 1.704 0 00-1.89 0 3.704 3.704 0 01-4.11 0 1.704 1.704 0 00-1.89 0A3.704 3.704 0 012 14.868V17a1 1 0 001 1h14a1 1 0 001-1v-2.132zM9 3a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm3 0a1 1 0 011-1h.01a1 1 0 110 2H13a1 1 0 01-1-1z"/>
+    </svg>,
+    // Bebida
+    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
+      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" clipRule="evenodd"/>
+    </svg>,
+    // Pizza
+    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
+      <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM7 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm5.5.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm-4 3a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+    </svg>,
+    // Sopa/cuenco
+    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
+      <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/>
+      <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/>
+      <path d="M17 5c0-1.657-3.134-3-7-3S3 3.343 3 5s3.134 3 7 3 7-1.343 7-3z"/>
+    </svg>,
+    // Caja de comida
+    <svg key={index} fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+    </svg>,
+    // Taco/comida rápida
+    <svg key={index} fill="currentColor" viewBox="0 0 20 20" className="w-full h-full">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd"/>
+    </svg>
+  ];
   return icons[index % icons.length];
 }
