@@ -6,7 +6,7 @@ import MenuClient from './MenuClient';
 async function getMenuData(slug) {
   try {
     const response = await fetch(
-      `https://tudominio.com/wp-json/qrmenu/v1/menu/${slug}`,
+      `https://easydishmenu.com/wp-json/qrmenu/v1/menu/${slug}`,
       {
         next: { revalidate: 60 } // Cache por 1 minuto
       }
