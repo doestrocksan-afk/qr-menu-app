@@ -754,7 +754,7 @@ export default function MenuClient({ menuData }) {
                           </h3>
                           <div style={{textAlign:'right'}}>
                             <span className="qr-item-price">
-                              {item.price.toFixed(2)}€
+                              {item.price.toFixed(2)}{item.currency || '€'}
                             </span>
                             {item.price_type === 'per_unit' && (
                               <div className="qr-unit-label">{item.unit_label || 'ud.'}</div>
@@ -825,7 +825,7 @@ export default function MenuClient({ menuData }) {
                   {selectedItem.name[language] || selectedItem.name.es}
                 </h2>
                 <div style={{display:'flex',alignItems:'baseline',gap:'8px',marginBottom:'16px'}}>
-                  <span className="qr-modal-price" style={{margin:0}}>{selectedItem.price.toFixed(2)}€</span>
+                  <span className="qr-modal-price" style={{margin:0}}>{selectedItem.price.toFixed(2)}{selectedItem.currency || '€'}</span>
                   {selectedItem.price_type === 'per_unit' && (
                     <span className="qr-unit-label" style={{fontSize:'14px',display:'block',marginLeft:0,marginTop:'2px'}}>{selectedItem.unit_label || 'por unidad'}</span>
                   )}
