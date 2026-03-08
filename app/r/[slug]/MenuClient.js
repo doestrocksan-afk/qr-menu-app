@@ -583,6 +583,45 @@ export default function MenuClient({ menuData }) {
         .qr-info-val { font-size: 15px; color: #c8c0b0; font-weight: 400; }
         .qr-info-link { font-size: 15px; color: #d4af5a; text-decoration: none; font-weight: 600; }
 
+
+        /* ── NO DISPONIBLE ── */
+        .qr-item-card.unavailable {
+          opacity: 0.55;
+          cursor: default;
+        }
+        .qr-unavailable-badge {
+          display: inline-block;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          padding: 3px 8px;
+          border-radius: 4px;
+          background: rgba(255,255,255,0.07);
+          color: #6a6050;
+          border: 1px solid rgba(255,255,255,0.1);
+          margin-top: 6px;
+        }
+        .qr-unit-label {
+          font-size: 11px;
+          color: #8a8070;
+          font-weight: 300;
+          margin-left: 4px;
+          letter-spacing: 0.03em;
+        }
+        .qr-modal-unavailable {
+          display: inline-block;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          padding: 4px 12px;
+          border-radius: 4px;
+          background: rgba(255,255,255,0.06);
+          color: #6a6050;
+          border: 1px solid rgba(255,255,255,0.08);
+          margin-bottom: 16px;
+        }
         /* ── SCROLLBAR ── */
         .qr-modal::-webkit-scrollbar { width: 4px; }
         .qr-modal::-webkit-scrollbar-track { background: transparent; }
@@ -672,8 +711,8 @@ export default function MenuClient({ menuData }) {
                 {category.items.map(item => (
                   <div
                     key={item.id}
-                    className="qr-item-card"
-                    onClick={() => openItem(item, category.id)}
+                    className={`qr-item-card${!item.available ? ' unavailable' : ''}`}
+                    onClick={() => item.available && openItem(item, category.id)}
                   >
                     {item.image_url ? (
                       <div className="qr-item-img-wrap">
@@ -695,10 +734,18 @@ export default function MenuClient({ menuData }) {
                           <h3 className="qr-item-name">
                             {item.name[language] || item.name.es}
                           </h3>
-                          <span className="qr-item-price">
-                            {item.price.toFixed(2)}€
-                          </span>
+                          <div style={{textAlign:'right'}}>
+                            <span className="qr-item-price">
+                              {item.price.toFixed(2)}€
+                            </span>
+                            {item.price_type === 'per_unit' && (
+                              <span className="qr-unit-label">{item.unit_label || 'ud.'}</span>
+                            )}
+                          </div>
                         </div>
+                        {!item.available && (
+                          <span className="qr-unavailable-badge">No disponible</span>
+                        )}
                         {(item.description[language] || item.description.es) && (
                           <p className="qr-item-desc">
                             {item.description[language] || item.description.es}
@@ -759,7 +806,15 @@ export default function MenuClient({ menuData }) {
                 <h2 className="qr-modal-title">
                   {selectedItem.name[language] || selectedItem.name.es}
                 </h2>
-                <div className="qr-modal-price">{selectedItem.price.toFixed(2)}€</div>
+                <div style={{display:'flex',alignItems:'baseline',gap:'8px',marginBottom:'16px'}}>
+                  <span className="qr-modal-price" style={{margin:0}}>{selectedItem.price.toFixed(2)}€</span>
+                  {selectedItem.price_type === 'per_unit' && (
+                    <span className="qr-unit-label" style={{fontSize:'14px'}}>{selectedItem.unit_label || 'por unidad'}</span>
+                  )}
+                </div>
+                {!selectedItem.available && (
+                  <span className="qr-modal-unavailable">⊘ No disponible ahora</span>
+                )}
                 {(selectedItem.description[language] || selectedItem.description.es) && (
                   <p className="qr-modal-desc">
                     {selectedItem.description[language] || selectedItem.description.es}
