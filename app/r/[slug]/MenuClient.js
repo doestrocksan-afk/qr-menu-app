@@ -668,7 +668,6 @@ export default function MenuClient({ menuData }) {
               value={language}
               onChange={(e) => changeLanguage(e.target.value)}
               className="qr-lang-select"
-              style={{display: languages.length > 1 ? '' : 'none'}}
             >
               {languages.map(lang => {
                 const flags = {es:'🇪🇸',en:'🇬🇧',fr:'🇫🇷',de:'🇩🇪',it:'🇮🇹',pt:'🇵🇹',nl:'🇳🇱',zh:'🇨🇳',ja:'🇯🇵',ar:'🇸🇦',ru:'🇷🇺',ca:'🏴',eu:'🏴',gl:'🏴'};
