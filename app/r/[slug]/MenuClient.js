@@ -3,22 +3,33 @@
 import { useState, useEffect } from 'react';
 
 export default function MenuClient({ menuData }) {
-  const [language, setLanguage] = useState('es');
+  const { restaurant, categories, languages = [], default_language = 'es' } = menuData;
+
+  const [language, setLanguage] = useState(default_language);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
   const [mounted, setMounted] = useState(false);
 
-  const { restaurant, categories } = menuData;
+  // Mapa de traducciones por código de idioma
+  const translationsMap = {};
+  languages.forEach(lang => {
+    translationsMap[lang.code] = lang.translations || {};
+  });
 
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('menu-language');
-    if (saved) setLanguage(saved);
+    // Solo usar el guardado si ese idioma sigue activo
+    const activeCodes = languages.map(l => l.code);
+    if (saved && activeCodes.includes(saved)) {
+      setLanguage(saved);
+    } else {
+      setLanguage(default_language);
+    }
   }, []);
 
   useEffect(() => {
-    // Inject Google Fonts
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap';
@@ -34,8 +45,8 @@ export default function MenuClient({ menuData }) {
   const openItem = (item, categoryId) => {
     setSelectedItem(item);
     if (window.menuTracker) {
-      window.menuTracker.itemClick(item.id, item.name[language] || item.name.es, categoryId);
-      window.menuTracker.itemOpen(item.id, item.name[language] || item.name.es);
+      window.menuTracker.itemClick(item.id, item.name[language] || item.name[default_language], categoryId);
+      window.menuTracker.itemOpen(item.id, item.name[language] || item.name[default_language]);
     }
   };
 
@@ -55,26 +66,32 @@ export default function MenuClient({ menuData }) {
     ? categories.map(cat => ({
         ...cat,
         items: cat.items.filter(item => {
-          const name = (item.name[language] || item.name.es || '').toLowerCase();
-          const desc = (item.description[language] || item.description.es || '').toLowerCase();
+          const name = (item.name[language] || item.name[default_language] || '').toLowerCase();
+          const desc = (item.description[language] || item.description[default_language] || '').toLowerCase();
           return name.includes(searchQuery.toLowerCase()) || desc.includes(searchQuery.toLowerCase());
         })
       }))
     : categories
   ).filter(cat => cat.items.length > 0);
 
+  // getText usa las traducciones dinámicas de la BD para textos configurables,
+  // y un fallback hardcoded para textos de navegación que no son configurables
   const getText = (key) => {
-    const texts = {
-      search:      { es: 'Buscar en la carta...', en: 'Search menu...', fr: 'Rechercher...' },
-      noResults:   { es: 'Sin resultados', en: 'No results', fr: 'Aucun résultat' },
-      information: { es: 'Información', en: 'Information', fr: 'Informations' },
-      restaurant:  { es: 'Restaurante', en: 'Restaurant', fr: 'Restaurant' },
-      phone:       { es: 'Teléfono', en: 'Phone', fr: 'Téléphone' },
-      address:     { es: 'Dirección', en: 'Address', fr: 'Adresse' },
-      allergens:   { es: 'Alérgenos', en: 'Allergens', fr: 'Allergènes' },
-      rateUs:      { es: 'Déjanos tu opinión', en: 'Leave a review', fr: 'Donnez votre avis' },
+    const trans = translationsMap[language] || translationsMap[default_language] || {};
+    const staticFallbacks = {
+      noResults:   { es: 'Sin resultados', en: 'No results', fr: 'Aucun résultat', de: 'Keine Ergebnisse', it: 'Nessun risultato', pt: 'Sem resultados' },
+      information: { es: 'Información', en: 'Information', fr: 'Informations', de: 'Information', it: 'Informazioni', pt: 'Informação' },
+      restaurant:  { es: 'Restaurante', en: 'Restaurant', fr: 'Restaurant', de: 'Restaurant', it: 'Ristorante', pt: 'Restaurante' },
+      phone:       { es: 'Teléfono', en: 'Phone', fr: 'Téléphone', de: 'Telefon', it: 'Telefono', pt: 'Telefone' },
+      address:     { es: 'Dirección', en: 'Address', fr: 'Adresse', de: 'Adresse', it: 'Indirizzo', pt: 'Endereço' },
+      rateUs:      { es: 'Déjanos tu opinión', en: 'Leave a review', fr: 'Donnez votre avis', de: 'Bewertung hinterlassen', it: 'Lascia una recensione', pt: 'Deixe uma avaliação' },
     };
-    return texts[key]?.[language] || texts[key]?.es || '';
+    // Textos configurables desde el plugin
+    if (key === 'search')     return trans.search_placeholder || 'Buscar en la carta...';
+    if (key === 'unavailable') return trans.unavailable_badge || 'No disponible';
+    if (key === 'allergens')  return trans.allergens_label || 'Alérgenos';
+    // Textos estáticos con fallback por idioma
+    return staticFallbacks[key]?.[language] || staticFallbacks[key]?.es || '';
   };
 
   const scrollToCategory = (catId) => {
@@ -651,10 +668,16 @@ export default function MenuClient({ menuData }) {
               value={language}
               onChange={(e) => changeLanguage(e.target.value)}
               className="qr-lang-select"
+              style={{display: languages.length > 1 ? '' : 'none'}}
             >
-              <option value="es">🇪🇸 ES</option>
-              <option value="en">🇬🇧 EN</option>
-              <option value="fr">🇫🇷 FR</option>
+              {languages.map(lang => {
+                const flags = {es:'🇪🇸',en:'🇬🇧',fr:'🇫🇷',de:'🇩🇪',it:'🇮🇹',pt:'🇵🇹',nl:'🇳🇱',zh:'🇨🇳',ja:'🇯🇵',ar:'🇸🇦',ru:'🇷🇺',ca:'🏴',eu:'🏴',gl:'🏴'};
+                return (
+                  <option key={lang.code} value={lang.code}>
+                    {flags[lang.code] || '🌐'} {lang.code.toUpperCase()}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -722,11 +745,7 @@ export default function MenuClient({ menuData }) {
                           className="qr-item-img"
                         />
                       </div>
-                    ) : (
-                      <div className="qr-item-no-img">
-                        <span className="qr-item-no-img-icon">🍽</span>
-                      </div>
-                    )}
+                    ) : null}
 
                     <div className="qr-item-body">
                       <div>
@@ -739,12 +758,12 @@ export default function MenuClient({ menuData }) {
                               {item.price.toFixed(2)}€
                             </span>
                             {item.price_type === 'per_unit' && (
-                              <span className="qr-unit-label">{item.unit_label || 'ud.'}</span>
+                              <div className="qr-unit-label">{item.unit_label || 'ud.'}</div>
                             )}
                           </div>
                         </div>
                         {!item.available && (
-                          <span className="qr-unavailable-badge">No disponible</span>
+                          <span className="qr-unavailable-badge">{getText('unavailable')}</span>
                         )}
                         {(item.description[language] || item.description.es) && (
                           <p className="qr-item-desc">
@@ -809,11 +828,11 @@ export default function MenuClient({ menuData }) {
                 <div style={{display:'flex',alignItems:'baseline',gap:'8px',marginBottom:'16px'}}>
                   <span className="qr-modal-price" style={{margin:0}}>{selectedItem.price.toFixed(2)}€</span>
                   {selectedItem.price_type === 'per_unit' && (
-                    <span className="qr-unit-label" style={{fontSize:'14px'}}>{selectedItem.unit_label || 'por unidad'}</span>
+                    <span className="qr-unit-label" style={{fontSize:'14px',display:'block',marginLeft:0,marginTop:'2px'}}>{selectedItem.unit_label || 'por unidad'}</span>
                   )}
                 </div>
                 {!selectedItem.available && (
-                  <span className="qr-modal-unavailable">⊘ No disponible ahora</span>
+                  <span className="qr-modal-unavailable">⊘ {getText('unavailable')}</span>
                 )}
                 {(selectedItem.description[language] || selectedItem.description.es) && (
                   <p className="qr-modal-desc">
