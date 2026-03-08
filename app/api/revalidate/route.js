@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
-export async function POST(request) {
+async function handleRevalidate(request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
   const slug = searchParams.get('slug');
@@ -17,4 +17,12 @@ export async function POST(request) {
   }
 
   return NextResponse.json({ revalidated: true, slug: slug || 'all' });
+}
+
+export async function GET(request) {
+  return handleRevalidate(request);
+}
+
+export async function POST(request) {
+  return handleRevalidate(request);
 }
