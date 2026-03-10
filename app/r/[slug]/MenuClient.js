@@ -67,14 +67,7 @@ export default function MenuClient({ menuData }) {
   const openGoogleReview = () => {
     if (window.menuTracker) window.menuTracker.reviewClick();
     if (restaurant.google_place_id) {
-      let pid = restaurant.google_place_id;
-      // Si es CID hex (guardado como "cid_HEX"), convertir a decimal con BigInt
-      if (pid.startsWith('cid_')) {
-        try {
-          pid = BigInt('0x' + pid.slice(4)).toString();
-        } catch(e) { pid = pid.slice(4); }
-      }
-      window.open(`https://search.google.com/local/writereview?placeid=${pid}`, '_blank');
+      window.open(`https://search.google.com/local/writereview?placeid=${restaurant.google_place_id}`, '_blank');
     }
   };
 
