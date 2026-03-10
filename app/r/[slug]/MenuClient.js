@@ -64,8 +64,8 @@ export default function MenuClient({ menuData }) {
   const openItem = (item, categoryId) => {
     setSelectedItem(item);
     if (window.menuTracker) {
-      window.menuTracker.itemClick(item.id, item.name[language] || item.name.es, categoryId);
-      window.menuTracker.itemOpen(item.id, item.name[language] || item.name.es);
+      window.menuTracker.itemClick(item.id, item.name[language] || item.name[fallbackLang] || item.name.es, categoryId);
+      window.menuTracker.itemOpen(item.id, item.name[language] || item.name[fallbackLang] || item.name.es);
     }
   };
 
@@ -85,7 +85,7 @@ export default function MenuClient({ menuData }) {
     ? categories.map(cat => ({
         ...cat,
         items: cat.items.filter(item => {
-          const name = (item.name[language] || item.name.es || '').toLowerCase();
+          const name = (item.name[language] || item.name[fallbackLang] || item.name.es || '').toLowerCase();
           const desc = (item.description[language] || item.description.es || '').toLowerCase();
           return name.includes(searchQuery.toLowerCase()) || desc.includes(searchQuery.toLowerCase());
         })
@@ -93,22 +93,32 @@ export default function MenuClient({ menuData }) {
     : categories
   ).filter(cat => cat.items.length > 0);
 
-  const getText = (key) => {
-    const texts = {
-      search:      { es: 'Buscar en la carta...', en: 'Search menu...', fr: 'Rechercher...' },
-      noResults:   { es: 'Sin resultados', en: 'No results', fr: 'Aucun résultat' },
-      information: { es: 'Información', en: 'Information', fr: 'Informations' },
-      restaurant:  { es: 'Restaurante', en: 'Restaurant', fr: 'Restaurant' },
-      phone:       { es: 'Teléfono', en: 'Phone', fr: 'Téléphone' },
-      address:     { es: 'Dirección', en: 'Address', fr: 'Adresse' },
-      allergens:   { es: 'Alérgenos', en: 'Allergens', fr: 'Allergènes' },
-      schedule:    { es: 'Horario', en: 'Opening hours', fr: 'Horaires' },
-      followUs:    { es: 'Síguenos', en: 'Follow us', fr: 'Suivez-nous' },
-      web:         { es: 'Página web', en: 'Website', fr: 'Site web' },
-      closed:      { es: 'Cerrado', en: 'Closed', fr: 'Fermé' },
-    };
-    return texts[key]?.[language] || texts[key]?.es || '';
+  // Textos estáticos por idioma (completos)
+  const staticTexts = {
+    search:      { es:'Buscar en la carta...', en:'Search menu...', fr:'Rechercher...', de:'Suchen...', it:'Cerca...', pt:'Pesquisar...', nl:'Zoeken...', zh:'搜索...', ja:'検索...', ar:'بحث...', ru:'Поиск...', ca:'Cercar...', eu:'Bilatu...', gl:'Buscar...' },
+    noResults:   { es:'Sin resultados', en:'No results', fr:'Aucun résultat', de:'Keine Ergebnisse', it:'Nessun risultato', pt:'Sem resultados', nl:'Geen resultaten', zh:'无结果', ja:'結果なし', ar:'لا نتائج', ru:'Нет результатов', ca:'Sense resultats', eu:'Emaitzarik ez', gl:'Sen resultados' },
+    information: { es:'Información', en:'Information', fr:'Informations', de:'Informationen', it:'Informazioni', pt:'Informações', nl:'Informatie', zh:'信息', ja:'情報', ar:'معلومات', ru:'Информация', ca:'Informació', eu:'Informazioa', gl:'Información' },
+    restaurant:  { es:'Restaurante', en:'Restaurant', fr:'Restaurant', de:'Restaurant', it:'Ristorante', pt:'Restaurante', nl:'Restaurant', zh:'餐厅', ja:'レストラン', ar:'مطعم', ru:'Ресторан', ca:'Restaurant', eu:'Jatetxea', gl:'Restaurante' },
+    phone:       { es:'Teléfono', en:'Phone', fr:'Téléphone', de:'Telefon', it:'Telefono', pt:'Telefone', nl:'Telefoon', zh:'电话', ja:'電話', ar:'هاتف', ru:'Телефон', ca:'Telèfon', eu:'Telefonoa', gl:'Teléfono' },
+    address:     { es:'Dirección', en:'Address', fr:'Adresse', de:'Adresse', it:'Indirizzo', pt:'Endereço', nl:'Adres', zh:'地址', ja:'住所', ar:'عنوان', ru:'Адрес', ca:'Adreça', eu:'Helbidea', gl:'Enderezo' },
+    allergens:   { es:'Alérgenos', en:'Allergens', fr:'Allergènes', de:'Allergene', it:'Allergeni', pt:'Alergénios', nl:'Allergenen', zh:'过敏原', ja:'アレルゲン', ar:'مسببات الحساسية', ru:'Аллергены', ca:'Al·lèrgens', eu:'Alergenoak', gl:'Alérxenos' },
+    schedule:    { es:'Horario', en:'Opening hours', fr:'Horaires', de:'Öffnungszeiten', it:'Orari', pt:'Horário', nl:'Openingstijden', zh:'营业时间', ja:'営業時間', ar:'أوقات العمل', ru:'Часы работы', ca:'Horari', eu:'Ordutegia', gl:'Horario' },
+    followUs:    { es:'Síguenos', en:'Follow us', fr:'Suivez-nous', de:'Folgen Sie uns', it:'Seguici', pt:'Siga-nos', nl:'Volg ons', zh:'关注我们', ja:'フォロー', ar:'تابعنا', ru:'Следите', ca:'Segueix-nos', eu:'Jarraitu', gl:'Séguenos' },
+    web:         { es:'Página web', en:'Website', fr:'Site web', de:'Webseite', it:'Sito web', pt:'Site', nl:'Website', zh:'网站', ja:'ウェブサイト', ar:'موقع', ru:'Сайт', ca:'Web', eu:'Webgunea', gl:'Web' },
+    closed:      { es:'Cerrado', en:'Closed', fr:'Fermé', de:'Geschlossen', it:'Chiuso', pt:'Fechado', nl:'Gesloten', zh:'休息', ja:'定休日', ar:'مغلق', ru:'Закрыто', ca:'Tancat', eu:'Itxita', gl:'Pechado' },
   };
+  // Traducciones personalizadas de la BD (search_placeholder, unavailable_badge, allergens_label)
+  const langObj = activeLanguages.find(l => l.code === language) || activeLanguages[0];
+  const customTrans = langObj?.translations || {};
+  // Idioma de fallback: primer idioma activo
+  const fallbackLang = activeLanguages[0]?.code || 'es';
+
+  const getText = (key) => {
+    if (key === 'search' && customTrans.search_placeholder) return customTrans.search_placeholder;
+    if (key === 'allergens' && customTrans.allergens_label) return customTrans.allergens_label;
+    return staticTexts[key]?.[language] || staticTexts[key]?.[fallbackLang] || staticTexts[key]?.es || '';
+  };
+  const getUnavailableText = () => customTrans.unavailable_badge || staticTexts.noResults?.[language] || getUnavailableText();
 
   const scrollToCategory = (catId) => {
     const el = document.getElementById(`cat-${catId}`);
@@ -308,15 +318,13 @@ export default function MenuClient({ menuData }) {
                 )}
               </div>
             </div>
-            {activeLanguages.length > 1 && (
-              <select value={language} onChange={(e) => changeLanguage(e.target.value)} className="qr-lang-select">
-                {activeLanguages.map(l => (
-                  <option key={l.code} value={l.code}>
-                    {langFlags[l.code] || '🌐'} {l.code.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select value={language} onChange={(e) => changeLanguage(e.target.value)} className="qr-lang-select">
+              {activeLanguages.map(l => (
+                <option key={l.code} value={l.code}>
+                  {langFlags[l.code] || '🌐'} {l.code.toUpperCase()}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Search */}
@@ -352,7 +360,7 @@ export default function MenuClient({ menuData }) {
             filteredCategories.map(category => (
               <section key={category.id} id={`cat-${category.id}`} className="qr-cat-section">
                 <div className="qr-cat-header">
-                  <h2 className="qr-cat-title">{category.name[language] || category.name.es}</h2>
+                  <h2 className="qr-cat-title">{category.name[language] || category.name[fallbackLang] || category.name.es}</h2>
                   <div className="qr-cat-line" />
                 </div>
                 {category.items.map(item => (
@@ -361,13 +369,13 @@ export default function MenuClient({ menuData }) {
                     onClick={() => item.available && openItem(item, category.id)}>
                     {item.image_url && (
                       <div className="qr-item-img-wrap">
-                        <img src={item.image_url} alt={item.name[language] || item.name.es} className="qr-item-img" />
+                        <img src={item.image_url} alt={item.name[language] || item.name[fallbackLang] || item.name.es} className="qr-item-img" />
                       </div>
                     )}
                     <div className="qr-item-body">
                       <div>
                         <div className="qr-item-top">
-                          <h3 className="qr-item-name">{item.name[language] || item.name.es}</h3>
+                          <h3 className="qr-item-name">{item.name[language] || item.name[fallbackLang] || item.name.es}</h3>
                           <div style={{textAlign:'right'}}>
                             <span className="qr-item-price">{formatPrice(item)}</span>
                             {item.price_type === 'per_unit' && (
