@@ -176,8 +176,8 @@ export default function MenuClient({ menuData }) {
 
         /* Search */
         .qr-search-wrap { max-width: 720px; margin: 0 auto; padding: 0 20px 14px; position: relative; }
-        .qr-search-icon { position: absolute; left: 36px; top: 50%; transform: translateY(-50%); color: ${textSecond}; font-size: 14px; pointer-events: none; line-height: 1; display: flex; align-items: center; }
-        .qr-search-input { width: 100%; padding: 10px 36px 10px 44px; background: ${inputBg}; border: 1px solid ${border}; border-radius: 8px; color: ${textPrimary}; font-family: 'Lato', sans-serif; font-size: 14px; font-weight: 300; outline: none; transition: border-color 0.2s; }
+
+        .qr-search-input { width: 100%; padding: 10px 36px 10px 16px; background: ${inputBg}; border: 1px solid ${border}; border-radius: 8px; color: ${textPrimary}; font-family: 'Lato', sans-serif; font-size: 14px; font-weight: 300; outline: none; transition: border-color 0.2s; }
         .qr-search-input::placeholder { color: ${textSecond}; }
         .qr-search-input:focus { border-color: ${hexAlpha(themeColor, 0.5)}; }
         .qr-search-clear { position: absolute; right: 28px; top: 50%; transform: translateY(-50%); background: none; border: none; color: ${textSecond}; font-size: 16px; cursor: pointer; padding: 4px; }
@@ -306,11 +306,7 @@ export default function MenuClient({ menuData }) {
 
           {/* Search */}
           <div className="qr-search-wrap">
-            <span className="qr-search-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </span>
+
             <input type="text" placeholder={getText('search')} value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)} className="qr-search-input" />
             {searchQuery && <button onClick={() => setSearchQuery('')} className="qr-search-clear">✕</button>}
