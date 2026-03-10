@@ -222,19 +222,12 @@ export default function MenuClient({ menuData }) {
         .qr-empty-btn { padding: 10px 24px; border-radius: 6px; border: 1px solid ${hexAlpha(themeColor, 0.4)}; background: transparent; color: ${themeColor}; font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; text-transform: uppercase; }
 
         /* Floating */
-        /* Review bar — centrado abajo en móvil */
-        .qr-review-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: flex; justify-content: center; padding: 12px 16px 20px; background: linear-gradient(to top, ${isDark?'rgba(15,14,12,0.97)':'rgba(248,246,242,0.97)'} 60%, transparent); pointer-events: none; }
-        .qr-review-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 99px; border: none; background: ${ctaColor}; color: #fff; font-family: 'Lato', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; box-shadow: 0 4px 20px ${hexAlpha(ctaColor, 0.5)}; transition: opacity 0.2s, transform 0.15s; pointer-events: all; }
+        /* Barra inferior — reseña + info juntos y centrados */
+        .qr-action-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: flex; justify-content: center; align-items: center; gap: 10px; padding: 12px 16px 20px; background: linear-gradient(to top, ${isDark?'rgba(15,14,12,0.97)':'rgba(248,246,242,0.97)'} 60%, transparent); }
+        .qr-review-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 99px; border: none; background: ${ctaColor}; color: #fff; font-family: 'Lato', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; box-shadow: 0 4px 20px ${hexAlpha(ctaColor, 0.5)}; transition: opacity 0.2s, transform 0.15s; }
         .qr-review-btn:hover { opacity: .9; transform: translateY(-1px); }
-        /* Info btn — siempre esquina inferior derecha, por encima de la barra */
-        .qr-info-btn-wrap { position: fixed; bottom: 80px; right: 16px; z-index: 41; }
-        .qr-info-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid ${border}; background: ${isDark?'rgba(30,28,24,0.95)':'rgba(255,255,255,0.95)'}; color: ${textSecond}; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); transition: border-color 0.2s; }
+        .qr-info-btn { width: 48px; height: 48px; border-radius: 50%; border: 1px solid ${border}; background: ${isDark?'rgba(30,28,24,0.95)':'rgba(255,255,255,0.95)'}; color: ${textSecond}; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); transition: border-color 0.2s; flex-shrink: 0; }
         .qr-info-btn:hover { border-color: ${hexAlpha(themeColor,0.5)}; color: ${themeColor}; }
-        @media (min-width: 600px) {
-          .qr-review-bar { left: auto; right: 16px; bottom: 24px; background: none; padding: 0; width: auto; }
-          .qr-review-btn { padding: 12px 20px; font-size: 13px; }
-          .qr-info-btn-wrap { bottom: 80px; }
-        }
 
         /* Modal */
         .qr-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
@@ -387,18 +380,15 @@ export default function MenuClient({ menuData }) {
           )}
         </main>
 
-        {/* INFO BTN — esquina inferior derecha, siempre clicable */}
-        <div className="qr-info-btn-wrap">
-          <button className="qr-info-btn" onClick={() => setSelectedItem('info')} title={getText('information')}>ℹ️</button>
-        </div>
-        {/* REVIEW BAR — centrado abajo */}
-        {restaurant.google_place_id && (
-          <div className="qr-review-bar">
+        {/* BARRA INFERIOR — reseña + info juntos */}
+        <div className="qr-action-bar">
+          {restaurant.google_place_id && (
             <button className="qr-review-btn" onClick={openGoogleReview}>
               ⭐ {ctaText}
             </button>
-          </div>
-        )}
+          )}
+          <button className="qr-info-btn" onClick={() => setSelectedItem('info')} title={getText('information')}>ℹ️</button>
+        </div>
 
         {/* MODAL PLATO */}
         {selectedItem && selectedItem !== 'info' && (
