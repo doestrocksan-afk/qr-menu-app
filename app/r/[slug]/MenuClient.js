@@ -14,7 +14,7 @@ export default function MenuClient({ menuData }) {
 
   // Tema dinámico desde settings
   const themeColor = restaurant.theme_color || '#ff6b35';
-  const themeMode  = restaurant.theme_mode || 'light';
+  const themeMode  = restaurant.theme_mode || 'dark';
   const isDark     = themeMode === 'dark' || themeMode === 'custom';
   // En modo custom el fondo es el color elegido, si no hay usamos el oscuro por defecto
   const customBg   = themeMode === 'custom' && restaurant.theme_bg_color ? restaurant.theme_bg_color : null;
