@@ -14,7 +14,10 @@ export default function MenuClient({ menuData }) {
 
   // Tema dinámico desde settings
   const themeColor = restaurant.theme_color || '#ff6b35';
-  const isDark     = (restaurant.theme_mode || 'light') === 'dark';
+  const themeMode  = restaurant.theme_mode || 'light';
+  const isDark     = themeMode === 'dark' || themeMode === 'custom';
+  // En modo custom el fondo es el color elegido, si no hay usamos el oscuro por defecto
+  const customBg   = themeMode === 'custom' && restaurant.theme_bg_color ? restaurant.theme_bg_color : null;
   const ctaColor   = restaurant.cta_color  || themeColor;
   const ctaText    = restaurant.cta_text   || 'Deja tu reseña';
 
@@ -122,7 +125,7 @@ export default function MenuClient({ menuData }) {
   const todayIdx  = (new Date().getDay() + 6) % 7; // 0=lun
 
   // Colores según tema
-  const bg       = isDark ? '#0f0e0c'    : '#f8f6f2';
+  const bg       = customBg ? customBg : (isDark ? '#0f0e0c' : '#f8f6f2');
   const surface  = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
   const border   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
   const textPrimary  = isDark ? '#f5efe0' : '#1a1510';
@@ -341,12 +344,10 @@ export default function MenuClient({ menuData }) {
                   <div key={item.id}
                     className={`qr-item-card${!item.available ? ' unavailable' : ''}`}
                     onClick={() => item.available && openItem(item, category.id)}>
-                    {item.image_url ? (
+                    {item.image_url && (
                       <div className="qr-item-img-wrap">
                         <img src={item.image_url} alt={item.name[language] || item.name.es} className="qr-item-img" />
                       </div>
-                    ) : (
-                      <div className="qr-item-no-img"><span className="qr-item-no-img-icon">🍽</span></div>
                     )}
                     <div className="qr-item-body">
                       <div>
