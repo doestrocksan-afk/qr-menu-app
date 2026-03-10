@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export default function MenuClient({ menuData }) {
-  const [language, setLanguage]       = useState('es');
+  const [language, setLanguage]       = useState(menuData.restaurant.default_language || 'es');
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
@@ -24,7 +24,15 @@ export default function MenuClient({ menuData }) {
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('menu-language');
-    if (saved) setLanguage(saved);
+    const defaultLang = menuData.restaurant.default_language || 'es';
+    // Usar localStorage solo si ese idioma sigue activo en el menú
+    const activeCodes = (menuData.languages || []).map(l => l.code);
+    if (saved && activeCodes.includes(saved)) {
+      setLanguage(saved);
+    } else {
+      setLanguage(defaultLang);
+      localStorage.removeItem('menu-language');
+    }
     // Mostrar welcome message solo si existe y no se ha visto hoy
     if (restaurant.welcome_message) {
       const today = new Date().toDateString();
