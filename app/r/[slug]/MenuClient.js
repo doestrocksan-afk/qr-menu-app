@@ -67,7 +67,7 @@ export default function MenuClient({ menuData }) {
   const openGoogleReview = () => {
     if (window.menuTracker) window.menuTracker.reviewClick();
     if (restaurant.google_place_id) {
-      window.open(`https://search.google.com/local/writereview?placeid=${restaurant.google_place_id}`, '_blank');
+      window.open(restaurant.google_place_id, '_blank');
     }
   };
 
@@ -189,7 +189,7 @@ export default function MenuClient({ menuData }) {
         .qr-cat-pill:hover, .qr-cat-pill.active { background: ${themeColor}; border-color: ${themeColor}; color: #fff; }
 
         /* Main */
-        .qr-main { max-width: 720px; margin: 0 auto; padding: 32px 20px 120px; }
+        .qr-main { max-width: 720px; margin: 0 auto; padding: 32px 20px 140px; }
 
         /* Category section */
         .qr-cat-section { margin-bottom: 48px; }
@@ -222,11 +222,20 @@ export default function MenuClient({ menuData }) {
         .qr-empty-btn { padding: 10px 24px; border-radius: 6px; border: 1px solid ${hexAlpha(themeColor, 0.4)}; background: transparent; color: ${themeColor}; font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; text-transform: uppercase; }
 
         /* Floating */
-        .qr-floating { position: fixed; bottom: 24px; right: 16px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 40; }
+        /* Floating — info btn esquina derecha, review btn centrado abajo en móvil */
+        .qr-floating { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; pointer-events: none; }
+        .qr-floating-info { position: fixed; bottom: 24px; right: 16px; pointer-events: all; }
         .qr-info-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid ${border}; background: ${isDark?'rgba(30,28,24,0.95)':'rgba(255,255,255,0.95)'}; color: ${textSecond}; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); transition: border-color 0.2s; }
         .qr-info-btn:hover { border-color: ${hexAlpha(themeColor,0.5)}; color: ${themeColor}; }
-        .qr-review-btn { display: flex; align-items: center; gap: 7px; padding: 12px 20px; border-radius: 24px; border: none; background: ${ctaColor}; color: #fff; font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; box-shadow: 0 4px 16px ${hexAlpha(ctaColor, 0.45)}; transition: opacity 0.2s, transform 0.15s; }
+        .qr-review-wrap { display: flex; justify-content: center; padding: 12px 16px 20px; pointer-events: all; background: linear-gradient(to top, ${isDark?'rgba(15,14,12,0.95)':'rgba(248,246,242,0.95)'} 60%, transparent); }
+        .qr-review-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 99px; border: none; background: ${ctaColor}; color: #fff; font-family: 'Lato', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; box-shadow: 0 4px 20px ${hexAlpha(ctaColor, 0.5)}; transition: opacity 0.2s, transform 0.15s; }
         .qr-review-btn:hover { opacity: .9; transform: translateY(-1px); }
+        @media (min-width: 600px) {
+          .qr-floating { bottom: auto; left: auto; right: 16px; bottom: 24px; width: auto; }
+          .qr-floating-info { bottom: 80px; }
+          .qr-review-wrap { padding: 0; background: none; }
+          .qr-review-btn { padding: 12px 20px; font-size: 13px; box-shadow: 0 4px 16px ${hexAlpha(ctaColor, 0.45)}; }
+        }
 
         /* Modal */
         .qr-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
@@ -381,12 +390,16 @@ export default function MenuClient({ menuData }) {
 
         {/* FLOATING */}
         <div className="qr-floating">
-          <button className="qr-info-btn" onClick={() => setSelectedItem('info')} title={getText('information')}>ℹ️</button>
           {restaurant.google_place_id && (
-            <button className="qr-review-btn" onClick={openGoogleReview}>
-              ⭐ {ctaText}
-            </button>
+            <div className="qr-review-wrap">
+              <button className="qr-review-btn" onClick={openGoogleReview}>
+                ⭐ {ctaText}
+              </button>
+            </div>
           )}
+        </div>
+        <div className="qr-floating-info">
+          <button className="qr-info-btn" onClick={() => setSelectedItem('info')} title={getText('information')}>ℹ️</button>
         </div>
 
         {/* MODAL PLATO */}
