@@ -11,6 +11,8 @@ export default function MenuClient({ menuData }) {
   const [mounted, setMounted]          = useState(false);
 
   const { restaurant, categories } = menuData;
+  const activeLanguages = menuData.languages || [];
+  const langFlags = { es:'🇪🇸', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', pt:'🇵🇹', nl:'🇳🇱', zh:'🇨🇳', ja:'🇯🇵', ar:'🇸🇦', ru:'🇷🇺', ca:'🏴', eu:'🏴', gl:'🏴' };
 
   // Tema dinámico desde settings
   const themeColor = restaurant.theme_color || '#ff6b35';
@@ -306,11 +308,15 @@ export default function MenuClient({ menuData }) {
                 )}
               </div>
             </div>
-            <select value={language} onChange={(e) => changeLanguage(e.target.value)} className="qr-lang-select">
-              <option value="es">🇪🇸 ES</option>
-              <option value="en">🇬🇧 EN</option>
-              <option value="fr">🇫🇷 FR</option>
-            </select>
+            {activeLanguages.length > 1 && (
+              <select value={language} onChange={(e) => changeLanguage(e.target.value)} className="qr-lang-select">
+                {activeLanguages.map(l => (
+                  <option key={l.code} value={l.code}>
+                    {langFlags[l.code] || '🌐'} {l.code.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Search */}
