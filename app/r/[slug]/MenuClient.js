@@ -64,8 +64,8 @@ export default function MenuClient({ menuData }) {
   const openItem = (item, categoryId) => {
     setSelectedItem(item);
     if (window.menuTracker) {
-      window.menuTracker.itemClick(item.id, item.name[language] || item.name[fallbackLang] || item.name.es, categoryId);
-      window.menuTracker.itemOpen(item.id, item.name[language] || item.name[fallbackLang] || item.name.es);
+      window.menuTracker.itemClick(item.id, getLang(item.name), categoryId);
+      window.menuTracker.itemOpen(item.id, getLang(item.name));
     }
   };
 
@@ -85,8 +85,8 @@ export default function MenuClient({ menuData }) {
     ? categories.map(cat => ({
         ...cat,
         items: cat.items.filter(item => {
-          const name = (item.name[language] || item.name[fallbackLang] || item.name.es || '').toLowerCase();
-          const desc = (item.description[language] || item.description.es || '').toLowerCase();
+          const name = (getLang(item.name) || '').toLowerCase();
+          const desc = (getLang(item.description) || '').toLowerCase();
           return name.includes(searchQuery.toLowerCase()) || desc.includes(searchQuery.toLowerCase());
         })
       }))
@@ -112,6 +112,12 @@ export default function MenuClient({ menuData }) {
   const customTrans = langObj?.translations || {};
   // Idioma de fallback: primer idioma activo
   const fallbackLang = activeLanguages[0]?.code || 'es';
+
+  // Obtener texto del campo en el idioma actual, con fallback al primer idioma activo y luego a cualquiera
+  const getLang = (obj) => {
+    if (!obj) return '';
+    return obj[language] || obj[fallbackLang] || Object.values(obj).find(v => v) || '';
+  };
 
   const getText = (key) => {
     if (key === 'search' && customTrans.search_placeholder) return customTrans.search_placeholder;
@@ -342,7 +348,7 @@ export default function MenuClient({ menuData }) {
                 <button key={cat.id}
                   className={`qr-cat-pill${activeCategory === cat.id ? ' active' : ''}`}
                   onClick={() => scrollToCategory(cat.id)}>
-                  {cat.name[language] || cat.name.es}
+                  {getLang(cat.name)}
                 </button>
               ))}
             </nav>
@@ -360,7 +366,7 @@ export default function MenuClient({ menuData }) {
             filteredCategories.map(category => (
               <section key={category.id} id={`cat-${category.id}`} className="qr-cat-section">
                 <div className="qr-cat-header">
-                  <h2 className="qr-cat-title">{category.name[language] || category.name[fallbackLang] || category.name.es}</h2>
+                  <h2 className="qr-cat-title">{getLang(category.name)}</h2>
                   <div className="qr-cat-line" />
                 </div>
                 {category.items.map(item => (
@@ -369,13 +375,13 @@ export default function MenuClient({ menuData }) {
                     onClick={() => item.available && openItem(item, category.id)}>
                     {item.image_url && (
                       <div className="qr-item-img-wrap">
-                        <img src={item.image_url} alt={item.name[language] || item.name[fallbackLang] || item.name.es} className="qr-item-img" />
+                        <img src={item.image_url} alt={getLang(item.name)} className="qr-item-img" />
                       </div>
                     )}
                     <div className="qr-item-body">
                       <div>
                         <div className="qr-item-top">
-                          <h3 className="qr-item-name">{item.name[language] || item.name[fallbackLang] || item.name.es}</h3>
+                          <h3 className="qr-item-name">{getLang(item.name)}</h3>
                           <div style={{textAlign:'right'}}>
                             <span className="qr-item-price">{formatPrice(item)}</span>
                             {item.price_type === 'per_unit' && (
@@ -384,8 +390,8 @@ export default function MenuClient({ menuData }) {
                           </div>
                         </div>
                         {!item.available && <span className="qr-unavailable-badge">No disponible</span>}
-                        {(item.description[language] || item.description.es) && (
-                          <p className="qr-item-desc">{item.description[language] || item.description.es}</p>
+                        {getLang(item.description) && (
+                          <p className="qr-item-desc">{getLang(item.description)}</p>
                         )}
                       </div>
                       {item.allergens?.length > 0 && (
@@ -419,13 +425,13 @@ export default function MenuClient({ menuData }) {
               <div className="qr-drag-handle" />
               {selectedItem.image_url && (
                 <div className="qr-modal-img-wrap">
-                  <img src={selectedItem.image_url} alt={selectedItem.name[language] || selectedItem.name.es} className="qr-modal-img" />
+                  <img src={selectedItem.image_url} alt={getLang(selectedItem.name)} className="qr-modal-img" />
                   <div className="qr-modal-img-overlay" />
                 </div>
               )}
               <div className="qr-modal-body">
                 <button className="qr-modal-close" onClick={closeItem}>✕</button>
-                <h2 className="qr-modal-title">{selectedItem.name[language] || selectedItem.name.es}</h2>
+                <h2 className="qr-modal-title">{getLang(selectedItem.name)}</h2>
                 <div style={{display:'flex',alignItems:'baseline',gap:'8px',marginBottom:'16px'}}>
                   <span className="qr-modal-price" style={{margin:0}}>{formatPrice(selectedItem)}</span>
                   {selectedItem.price_type === 'per_unit' && (
@@ -433,8 +439,8 @@ export default function MenuClient({ menuData }) {
                   )}
                 </div>
                 {!selectedItem.available && <span className="qr-modal-unavailable">⊘ No disponible ahora</span>}
-                {(selectedItem.description[language] || selectedItem.description.es) && (
-                  <p className="qr-modal-desc">{selectedItem.description[language] || selectedItem.description.es}</p>
+                {(getLang(selectedItem.description)) && (
+                  <p className="qr-modal-desc">{getLang(selectedItem.description)}</p>
                 )}
                 {selectedItem.allergens?.length > 0 && (
                   <>
