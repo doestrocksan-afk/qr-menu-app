@@ -409,7 +409,8 @@ export default function MenuClient({ menuData }) {
                     onClick={() => item.available && openItem(item, category.id)}>
                     {item.image_url && (
                       <div className="qr-item-img-wrap">
-                        <img src={item.image_url} alt={getLang(item.name)} className="qr-item-img" />
+                        <img src={item.image_url.replace('http://', 'https://')} alt={getLang(item.name)} className="qr-item-img"
+                             onError={(e) => { e.target.closest('.qr-item-img-wrap').style.display='none'; }} />
                       </div>
                     )}
                     <div className="qr-item-body">
@@ -465,8 +466,9 @@ export default function MenuClient({ menuData }) {
             <div className="qr-modal" onClick={e => e.stopPropagation()}>
               <div className="qr-drag-handle" />
               {selectedItem.image_url && (
-                <div className="qr-modal-img-wrap" onClick={() => setPhotoZoom(selectedItem.image_url)}>
-                  <img src={selectedItem.image_url} alt={getLang(selectedItem.name)} className="qr-modal-img" />
+                <div className="qr-modal-img-wrap" onClick={() => setPhotoZoom(selectedItem.image_url.replace('http://','https://'))}>
+                  <img src={selectedItem.image_url.replace('http://', 'https://')} alt={getLang(selectedItem.name)} className="qr-modal-img"
+                       onError={(e) => { e.target.closest('.qr-modal-img-wrap').style.display='none'; }} />
                   <div className="qr-modal-img-overlay" />
                   <div style={{position:'absolute',bottom:'12px',right:'12px',background:'rgba(0,0,0,0.5)',borderRadius:'6px',padding:'4px 8px',fontSize:'11px',color:'rgba(255,255,255,0.8)',pointerEvents:'none'}}>🔍 Ver foto</div>
                 </div>
