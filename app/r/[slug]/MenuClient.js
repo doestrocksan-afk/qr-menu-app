@@ -81,17 +81,7 @@ export default function MenuClient({ menuData }) {
     }
   };
 
-  const filteredCategories = (searchQuery.trim()
-    ? categories.map(cat => ({
-        ...cat,
-        items: cat.items.filter(item => {
-          const name = (getLang(item.name) || '').toLowerCase();
-          const desc = (getLang(item.description) || '').toLowerCase();
-          return name.includes(searchQuery.toLowerCase()) || desc.includes(searchQuery.toLowerCase());
-        })
-      }))
-    : categories
-  ).filter(cat => cat.items.length > 0);
+  // filteredCategories — declarado abajo tras getLang
 
   // Textos estáticos por idioma (completos)
   const staticTexts = {
@@ -124,7 +114,19 @@ export default function MenuClient({ menuData }) {
     if (key === 'allergens' && customTrans.allergens_label) return customTrans.allergens_label;
     return staticTexts[key]?.[language] || staticTexts[key]?.[fallbackLang] || staticTexts[key]?.es || '';
   };
-  const getUnavailableText = () => customTrans.unavailable_badge || staticTexts.noResults?.[language] || getUnavailableText();
+  const getUnavailableText = () => customTrans.unavailable_badge || staticTexts.noResults?.[language] || 'No disponible';
+
+  const filteredCategories = (searchQuery.trim()
+    ? categories.map(cat => ({
+        ...cat,
+        items: cat.items.filter(item => {
+          const name = (getLang(item.name) || '').toLowerCase();
+          const desc = (getLang(item.description) || '').toLowerCase();
+          return name.includes(searchQuery.toLowerCase()) || desc.includes(searchQuery.toLowerCase());
+        })
+      }))
+    : categories
+  ).filter(cat => cat.items.length > 0);
 
   const scrollToCategory = (catId) => {
     const el = document.getElementById(`cat-${catId}`);
