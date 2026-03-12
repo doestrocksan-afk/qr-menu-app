@@ -430,7 +430,7 @@ export default function MenuClient({ menuData }) {
                       </div>
                       {item.allergens?.length > 0 && (
                         <div className="qr-allergen-icons">
-                          {item.allergens.map((a,i) => {
+                          {item.allergens.slice(0,5).map((a,i) => {
                             const src = getAllergenImg(a);
                             return src ? (
                               <img key={i} src={src} alt={getAllergenName(a)} title={getAllergenName(a)} className="qr-allergen-mini" />
@@ -438,9 +438,7 @@ export default function MenuClient({ menuData }) {
                               <span key={i} className="qr-allergen">{a.trim()}</span>
                             );
                           })}
-                        </div>
-                      )}</span>)}
-                          {item.allergens.length > 3 && <span className="qr-allergen-more">+{item.allergens.length - 3}</span>}
+                          {item.allergens.length > 5 && <span className="qr-allergen-more">+{item.allergens.length - 5}</span>}
                         </div>
                       )}
                     </div>
