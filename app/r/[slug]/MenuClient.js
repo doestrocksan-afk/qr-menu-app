@@ -9,10 +9,34 @@ export default function MenuClient({ menuData }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [showWelcome, setShowWelcome]  = useState(false);
   const [mounted, setMounted]          = useState(false);
+  const [photoZoom, setPhotoZoom]      = useState(null);
 
   const { restaurant, categories } = menuData;
   const activeLanguages = menuData.languages || [];
   const langFlags = { es:'🇪🇸', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', pt:'🇵🇹', nl:'🇳🇱', zh:'🇨🇳', ja:'🇯🇵', ar:'🇸🇦', ru:'🇷🇺', ca:'🏴', eu:'🏴', gl:'🏴' };
+
+  // Mapa alérgenos → archivo SVG en /allergens/
+  const allergenMap = {
+    gluten:    { es: 'Gluten',            file: 'IconoAlergenoGluten-Gluten_icon-icons.com_67600.svg' },
+    lacteos:   { es: 'Lácteos',           file: 'IconoAlergenoLacteos-DairyProducts_icon-icons.com_67597.svg' },
+    huevo:     { es: 'Huevo',             file: 'IconoAlergenoHuevo-Egg_icon-icons.com_67598.svg' },
+    pescado:   { es: 'Pescado',           file: 'Fish_icon-icons.com_67594.svg' },
+    cacahuete: { es: 'Cacahuete',         file: 'IconoAlergenoCacahuete-Peanuts_icon-icons.com_67604.svg' },
+    soja:      { es: 'Soja',              file: 'Soy_icon-icons.com_67593.svg' },
+    frutoscos: { es: 'Frutos de cáscara', file: 'IconoAlergenoFrutosCascaraPeelFruits_icon-icons.com_67601.svg' },
+    apio:      { es: 'Apio',              file: 'IconoAlergenoApio-Celery_icon-icons.com_67605.svg' },
+    mostaza:   { es: 'Mostaza',           file: 'IconoAlergenoMostaza-Mustard_icon-icons.com_67595.svg' },
+    sesamo:    { es: 'Sésamo',            file: 'IconoAlergenoGranosSesamo-SesameGrains_icon-icons.com_67599.svg' },
+    sulfitos:  { es: 'Sulfitos',          file: 'IconoAlergenoDioxidoAzufreSulfitosSulfurDioxideSulphites_icon-icons.com_67602.svg' },
+    moluscos:  { es: 'Moluscos',          file: 'IconoAlergenoMoluscos-Mollusks_icon-icons.com_67596.svg' },
+    crustaceo: { es: 'Crustáceos',        file: 'IconoAlergenoCrustaceo-Crustaceans_icon-icons.com_67603.svg' },
+    altramuz:  { es: 'Altramuces',        file: 'IconoAlergenoAltramuces-Lupins_icon-icons.com_67606.svg' },
+  };
+  const getAllergenImg = (code) => {
+    const a = allergenMap[code.trim().toLowerCase()];
+    return a ? `/allergens/${a.file}` : null;
+  };
+  const getAllergenName = (code) => allergenMap[code.trim().toLowerCase()]?.es || code;
 
   // Tema dinámico desde settings
   const themeColor = restaurant.theme_color || '#ff6b35';
@@ -239,6 +263,8 @@ export default function MenuClient({ menuData }) {
         .qr-item-desc { margin-top: 6px; font-size: 13px; color: ${textSecond}; font-weight: 300; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .qr-item-bottom { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         .qr-allergen { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: ${hexAlpha(themeColor, 0.1)}; color: ${themeColor}; border: 1px solid ${hexAlpha(themeColor, 0.2)}; }
+        .qr-allergen-icons { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+        .qr-allergen-mini { width: 18px; height: 18px; object-fit: contain; opacity: 0.75; }
         .qr-allergen-more { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: ${isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)'}; color: ${textSecond}; }
         .qr-item-card.unavailable { opacity: 0.55; cursor: default; }
         .qr-unavailable-badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: ${isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)'}; color: ${textSecond}; margin-top: 6px; }
@@ -258,15 +284,18 @@ export default function MenuClient({ menuData }) {
         .qr-info-btn:hover { border-color: ${hexAlpha(themeColor,0.5)}; color: ${themeColor}; }
 
         /* Modal */
-        .qr-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
+        .qr-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (min-width: 600px) { .qr-overlay { align-items: center; padding: 16px; } .qr-modal { border-radius: 16px !important; max-height: 85vh !important; } }
-        .qr-modal { background: ${modalBg}; border-radius: 20px 20px 0 0; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; border: 1px solid ${border}; animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1); }
+        @media (min-width: 600px) { .qr-modal { max-height: 85vh !important; } }
+        .qr-modal { background: ${modalBg}; border-radius: 20px; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; border: 1px solid ${border}; animation: slideUp 0.25s cubic-bezier(0.32,0.72,0,1); }
         @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .qr-modal-img-wrap { width: 100%; height: 260px; overflow: hidden; border-radius: 20px 20px 0 0; position: relative; }
+        .qr-modal-img-wrap { width: 100%; height: 260px; overflow: hidden; border-radius: 20px 20px 0 0; position: relative; cursor: zoom-in; }
         .qr-modal-img { width: 100%; height: 100%; object-fit: cover; }
         .qr-modal-img-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 80px; background: linear-gradient(to top, ${modalBg}, transparent); }
         .qr-modal-body { padding: 24px; position: relative; }
+        .qr-photo-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; animation: fadeIn 0.2s ease; }
+        .qr-photo-lightbox img { max-width: 100%; max-height: 90vh; border-radius: 12px; object-fit: contain; animation: slideUp 0.2s ease; }
+        .qr-photo-close { position: fixed; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .qr-modal-close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid ${border}; background: ${isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)'}; color: ${textSecond}; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .qr-modal-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: ${textPrimary}; line-height: 1.2; margin: 0 40px 10px 0; }
         .qr-modal-price { font-size: 28px; font-weight: 700; color: ${themeColor}; margin-bottom: 16px; }
@@ -274,6 +303,9 @@ export default function MenuClient({ menuData }) {
         .qr-modal-divider { height: 1px; background: ${border}; margin-bottom: 20px; }
         .qr-modal-allergens-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${textSecond}; margin-bottom: 12px; }
         .qr-modal-allergens-list { display: flex; gap: 8px; flex-wrap: wrap; }
+        .qr-allergen-icon-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .qr-allergen-icon { width: 36px; height: 36px; object-fit: contain; opacity: 0.85; }
+        .qr-allergen-icon-label { font-size: 10px; font-weight: 600; color: ${textSecond}; text-align: center; line-height: 1.2; }
         .qr-modal-allergen { padding: 6px 14px; border-radius: 6px; background: ${hexAlpha(themeColor, 0.08)}; border: 1px solid ${hexAlpha(themeColor, 0.2)}; color: ${themeColor}; font-size: 13px; font-weight: 700; }
         .qr-modal-unavailable { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 12px; border-radius: 4px; background: ${isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)'}; color: ${textSecond}; margin-bottom: 16px; }
 
@@ -397,8 +429,17 @@ export default function MenuClient({ menuData }) {
                         )}
                       </div>
                       {item.allergens?.length > 0 && (
-                        <div className="qr-item-bottom">
-                          {item.allergens.slice(0, 3).map((a, i) => <span key={i} className="qr-allergen">{a.trim()}</span>)}
+                        <div className="qr-allergen-icons">
+                          {item.allergens.map((a,i) => {
+                            const src = getAllergenImg(a);
+                            return src ? (
+                              <img key={i} src={src} alt={getAllergenName(a)} title={getAllergenName(a)} className="qr-allergen-mini" />
+                            ) : (
+                              <span key={i} className="qr-allergen">{a.trim()}</span>
+                            );
+                          })}
+                        </div>
+                      )}</span>)}
                           {item.allergens.length > 3 && <span className="qr-allergen-more">+{item.allergens.length - 3}</span>}
                         </div>
                       )}
@@ -426,9 +467,10 @@ export default function MenuClient({ menuData }) {
             <div className="qr-modal" onClick={e => e.stopPropagation()}>
               <div className="qr-drag-handle" />
               {selectedItem.image_url && (
-                <div className="qr-modal-img-wrap">
+                <div className="qr-modal-img-wrap" onClick={() => setPhotoZoom(selectedItem.image_url)}>
                   <img src={selectedItem.image_url} alt={getLang(selectedItem.name)} className="qr-modal-img" />
                   <div className="qr-modal-img-overlay" />
+                  <div style={{position:'absolute',bottom:'12px',right:'12px',background:'rgba(0,0,0,0.5)',borderRadius:'6px',padding:'4px 8px',fontSize:'11px',color:'rgba(255,255,255,0.8)',pointerEvents:'none'}}>🔍 Ver foto</div>
                 </div>
               )}
               <div className="qr-modal-body">
@@ -449,12 +491,30 @@ export default function MenuClient({ menuData }) {
                     <div className="qr-modal-divider" />
                     <p className="qr-modal-allergens-title">⚠ {getText('allergens')}</p>
                     <div className="qr-modal-allergens-list">
-                      {selectedItem.allergens.map((a, i) => <span key={i} className="qr-modal-allergen">{a.trim()}</span>)}
+                      {selectedItem.allergens.map((a, i) => {
+                        const src = getAllergenImg(a);
+                        return src ? (
+                          <div key={i} className="qr-allergen-icon-wrap">
+                            <img src={src} alt={getAllergenName(a)} className="qr-allergen-icon" />
+                            <span className="qr-allergen-icon-label">{getAllergenName(a)}</span>
+                          </div>
+                        ) : (
+                          <span key={i} className="qr-modal-allergen">{a.trim()}</span>
+                        );
+                      })}
                     </div>
                   </>
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* LIGHTBOX FOTO */}
+        {photoZoom && (
+          <div className="qr-photo-lightbox" onClick={() => setPhotoZoom(null)}>
+            <button className="qr-photo-close" onClick={() => setPhotoZoom(null)}>✕</button>
+            <img src={photoZoom} alt="" onClick={e => e.stopPropagation()} />
           </div>
         )}
 
