@@ -17,26 +17,26 @@ export default function MenuClient({ menuData }) {
 
   // Mapa alérgenos → archivo SVG en /allergens/
   const allergenMap = {
-    gluten:    { es: 'Gluten',            file: 'IconoAlergenoGluten-Gluten_icon-icons.com_67600.svg' },
-    lacteos:   { es: 'Lácteos',           file: 'IconoAlergenoLacteos-DairyProducts_icon-icons.com_67597.svg' },
-    huevo:     { es: 'Huevo',             file: 'IconoAlergenoHuevo-Egg_icon-icons.com_67598.svg' },
-    pescado:   { es: 'Pescado',           file: 'Fish_icon-icons.com_67594.svg' },
-    cacahuete: { es: 'Cacahuete',         file: 'IconoAlergenoCacahuete-Peanuts_icon-icons.com_67604.svg' },
-    soja:      { es: 'Soja',              file: 'Soy_icon-icons.com_67593.svg' },
-    frutoscos: { es: 'Frutos de cáscara', file: 'IconoAlergenoFrutosCascaraPeelFruits_icon-icons.com_67601.svg' },
-    apio:      { es: 'Apio',              file: 'IconoAlergenoApio-Celery_icon-icons.com_67605.svg' },
-    mostaza:   { es: 'Mostaza',           file: 'IconoAlergenoMostaza-Mustard_icon-icons.com_67595.svg' },
-    sesamo:    { es: 'Sésamo',            file: 'IconoAlergenoGranosSesamo-SesameGrains_icon-icons.com_67599.svg' },
-    sulfitos:  { es: 'Sulfitos',          file: 'IconoAlergenoDioxidoAzufreSulfitosSulfurDioxideSulphites_icon-icons.com_67602.svg' },
-    moluscos:  { es: 'Moluscos',          file: 'IconoAlergenoMoluscos-Mollusks_icon-icons.com_67596.svg' },
-    crustaceo: { es: 'Crustáceos',        file: 'IconoAlergenoCrustaceo-Crustaceans_icon-icons.com_67603.svg' },
-    altramuz:  { es: 'Altramuces',        file: 'IconoAlergenoAltramuces-Lupins_icon-icons.com_67606.svg' },
+    gluten:    'Gluten',
+    lacteos:   'Lácteos',
+    huevo:     'Huevo',
+    pescado:   'Pescado',
+    cacahuete: 'Cacahuete',
+    soja:      'Soja',
+    frutoscos: 'Frutos de cáscara',
+    apio:      'Apio',
+    mostaza:   'Mostaza',
+    sesamo:    'Sésamo',
+    sulfitos:  'Sulfitos',
+    moluscos:  'Moluscos',
+    crustaceo: 'Crustáceos',
+    altramuz:  'Altramuces',
   };
   const getAllergenImg = (code) => {
-    const a = allergenMap[code.trim().toLowerCase()];
-    return a ? `/allergens/${a.file}` : null;
+    const key = code.trim().toLowerCase();
+    return allergenMap[key] ? `/allergens/${key}.svg` : null;
   };
-  const getAllergenName = (code) => allergenMap[code.trim().toLowerCase()]?.es || code;
+  const getAllergenName = (code) => allergenMap[code.trim().toLowerCase()] || code;
 
   // Tema dinámico desde settings
   const themeColor = restaurant.theme_color || '#ff6b35';
