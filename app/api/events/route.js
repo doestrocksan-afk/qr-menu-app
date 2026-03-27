@@ -12,7 +12,6 @@ export async function POST(request) {
       );
     }
     
-    // Preparar eventos para insertar
     const eventsToInsert = events.map(event => ({
       restaurant_id: event.restaurant_id,
       session_id: event.session_id,
@@ -23,31 +22,23 @@ export async function POST(request) {
       created_at: new Date().toISOString()
     }));
     
-    // Insertar en batch
     const { data, error } = await supabase
       .from('analytics_events')
       .insert(eventsToInsert);
     
     if (error) {
       console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: 'Failed to save events' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to save events' }, { status: 500 });
     }
     
     return NextResponse.json({ success: true, count: events.length });
     
   } catch (error) {
     console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Endpoint GET para obtener analytics (usado por WordPress)
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -55,13 +46,9 @@ export async function GET(request) {
     const days = parseInt(searchParams.get('days') || '7');
     
     if (!restaurantId) {
-      return NextResponse.json(
-        { error: 'restaurant_id is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'restaurant_id is required' }, { status: 400 });
     }
     
-    // Obtener eventos de los últimos X días
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     
@@ -74,27 +61,20 @@ export async function GET(request) {
     
     if (error) {
       console.error('Supabase error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch events' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
     }
     
-    // Procesar estadísticas
     const stats = processAnalytics(events);
     
     return NextResponse.json({
       success: true,
       stats,
-      raw_events: events.slice(0, 100) // Solo las últimas 100
+      raw_events: events.slice(0, 100)
     });
     
   } catch (error) {
     console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -102,7 +82,7 @@ function processAnalytics(events) {
   const totalViews = events.filter(e => e.event === 'page_view').length;
   const uniqueSessions = new Set(events.map(e => e.session_id)).size;
   
-  // Top platos más vistos
+  // Top platos
   const itemViews = {};
   events
     .filter(e => e.event === 'item_open' && e.item_id)
@@ -115,7 +95,6 @@ function processAnalytics(events) {
       itemViews[itemId].views++;
     });
   
-  // Tiempo por plato
   events
     .filter(e => e.event === 'item_close' && e.item_id)
     .forEach(e => {
@@ -125,9 +104,8 @@ function processAnalytics(events) {
       }
     });
   
-  // Calcular tiempo medio
   Object.values(itemViews).forEach(item => {
-    item.avg_time = item.views > 0 ? Math.round(item.total_time / item.views / 1000) : 0; // en segundos
+    item.avg_time = item.views > 0 ? Math.round(item.total_time / item.views / 1000) : 0;
   });
   
   const topItems = Object.values(itemViews)
@@ -139,15 +117,50 @@ function processAnalytics(events) {
   events
     .filter(e => e.event === 'page_view' && e.data?.device)
     .forEach(e => {
-      const device = e.data.device;
-      devices[device] = (devices[device] || 0) + 1;
+      devices[e.data.device] = (devices[e.data.device] || 0) + 1;
     });
-  
+
+  // ── Idiomas ──────────────────────────────────────────────────────────────
+  // Idioma final de cada sesión = último language_change.to
+  // Si no hubo cambios = idioma del page_view
+  const sessionLang = {};
+  // Primero registrar idioma inicial de cada sesión
+  events
+    .filter(e => e.event === 'page_view' && e.data?.language)
+    .forEach(e => {
+      if (!sessionLang[e.session_id]) {
+        sessionLang[e.session_id] = e.data.language;
+      }
+    });
+  // Luego sobrescribir con el último language_change
+  // Los eventos vienen ordenados desc, así que procesamos al revés
+  [...events].reverse()
+    .filter(e => e.event === 'language_change' && e.data?.to)
+    .forEach(e => {
+      sessionLang[e.session_id] = e.data.to;
+    });
+
+  // Contar sesiones por idioma final
+  const langCounts = {};
+  Object.values(sessionLang).forEach(lang => {
+    langCounts[lang] = (langCounts[lang] || 0) + 1;
+  });
+
+  // Ordenar de mayor a menor
+  const languageStats = Object.entries(langCounts)
+    .sort((a, b) => b[1] - a[1])
+    .reduce((acc, [lang, count]) => {
+      acc[lang] = count;
+      return acc;
+    }, {});
+  // ─────────────────────────────────────────────────────────────────────────
+
   return {
     total_views: totalViews,
     unique_sessions: uniqueSessions,
     top_items: topItems,
     devices: devices,
+    language_stats: languageStats,
     period_days: Math.ceil((Date.now() - new Date(events[events.length - 1]?.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))
   };
 }
