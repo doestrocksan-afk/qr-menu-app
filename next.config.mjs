@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   poweredByHeader: false,
   images: { remotePatterns: [{ protocol: 'https', hostname: 'easydishmenu.com', pathname: '/wp-content/uploads/**' }] },
   async headers() {
