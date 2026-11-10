@@ -1,3 +1,5 @@
+import './globals.css';
+
 export const metadata = {
   title: 'QR Menu',
   description: 'Menús digitales para restaurantes',

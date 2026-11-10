@@ -1,14 +1,3 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'easydishmenu.com',
-        pathname: '/wp-content/uploads/**',
-      },
-    ],
-  },
-};
-
-module.exports = nextConfig;
+// Compatibility entry for deployments that still select next.config.js.
+// The single source of configuration is next.config.mjs.
+module.exports = async () => (await import('./next.config.mjs')).default;

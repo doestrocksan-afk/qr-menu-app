@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import catalog from '@/lib/allergens.json';
+import { defaultLanguage, allergenName, safeWebUrl, safeColor } from '@/lib/menu-utils.mjs';
 
 export default function MenuClient({ menuData }) {
-  const [language, setLanguage]       = useState(menuData.restaurant.default_language || 'es');
+  const [language, setLanguage]       = useState(defaultLanguage(menuData));
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
@@ -36,53 +38,64 @@ export default function MenuClient({ menuData }) {
     const key = code.trim().toLowerCase();
     return allergenMap[key] ? `/allergens/${key}.svg` : null;
   };
-  const getAllergenName = (code) => allergenMap[code.trim().toLowerCase()] || code;
+  const getAllergenName = (code) => allergenName(code, language, menuData, catalog);
 
   // Tema dinámico desde settings
-  const themeColor = restaurant.theme_color || '#ff6b35';
+  const themeColor = safeColor(restaurant.theme_color, '#ff6b35');
   const themeMode  = restaurant.theme_mode || 'dark';
   const isDark     = themeMode === 'dark' || themeMode === 'custom';
   // En modo custom el fondo es el color elegido, si no hay usamos el oscuro por defecto
-  const customBg   = themeMode === 'custom' && restaurant.theme_bg_color ? restaurant.theme_bg_color : null;
-  const ctaColor   = restaurant.cta_color  || themeColor;
+  const customBg   = themeMode === 'custom' && restaurant.theme_bg_color ? safeColor(restaurant.theme_bg_color, null) : null;
+  const ctaColor   = safeColor(restaurant.cta_color, themeColor);
   const ctaText    = restaurant.cta_text   || 'Deja tu reseña';
 
+  /* Hydrate restaurant-specific browser storage after SSR; one intentional state sync. */
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('menu-language');
-    const defaultLang = menuData.restaurant.default_language || 'es';
+    let saved;
+    try { saved = localStorage.getItem(`menu-language-${restaurant.id}`); } catch {}
+    const defaultLang = defaultLanguage(menuData);
     // Usar localStorage solo si ese idioma sigue activo en el menú
     const activeCodes = (menuData.languages || []).map(l => l.code);
     if (saved && activeCodes.includes(saved)) {
       setLanguage(saved);
     } else {
       setLanguage(defaultLang);
-      localStorage.removeItem('menu-language');
+      try { localStorage.removeItem(`menu-language-${restaurant.id}`); } catch {}
     }
     // Mostrar welcome message solo si existe y no se ha visto hoy
     if (restaurant.welcome_message) {
       const today = new Date().toDateString();
-      const seen  = localStorage.getItem('qrm-welcome-seen');
+      let seen;
+      try { seen = localStorage.getItem(`qrm-welcome-seen-${restaurant.id}`); } catch {}
       if (seen !== today) { setShowWelcome(true); }
     }
-  }, []);
+  }, [menuData, restaurant.id, restaurant.welcome_message]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const link  = document.createElement('link');
     link.rel    = 'stylesheet';
     link.href   = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap';
     document.head.appendChild(link);
+    return () => link.remove();
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }, [language]);
+
   const dismissWelcome = () => {
-    localStorage.setItem('qrm-welcome-seen', new Date().toDateString());
+    try { localStorage.setItem(`qrm-welcome-seen-${restaurant.id}`, new Date().toDateString()); } catch {}
     setShowWelcome(false);
   };
 
   const changeLanguage = (newLang) => {
     if (window.menuTracker) window.menuTracker.languageChange(language, newLang);
     setLanguage(newLang);
-    localStorage.setItem('menu-language', newLang);
+    try { localStorage.setItem(`menu-language-${restaurant.id}`, newLang); } catch {}
   };
 
   const openItem = (item, categoryId) => {
@@ -101,7 +114,8 @@ export default function MenuClient({ menuData }) {
   const openGoogleReview = () => {
     if (window.menuTracker) window.menuTracker.reviewClick();
     if (restaurant.google_place_id) {
-      window.open(restaurant.google_place_id, '_blank');
+      const url = safeWebUrl(restaurant.google_place_id);
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -125,7 +139,7 @@ export default function MenuClient({ menuData }) {
   const langObj = activeLanguages.find(l => l.code === language) || activeLanguages[0];
   const customTrans = langObj?.translations || {};
   // Idioma de fallback: primer idioma activo
-  const fallbackLang = activeLanguages[0]?.code || 'es';
+  const fallbackLang = defaultLanguage(menuData);
 
   // Obtener texto del campo en el idioma actual, con fallback al primer idioma activo y luego a cualquiera
   const getLang = (obj) => {
@@ -138,7 +152,8 @@ export default function MenuClient({ menuData }) {
     if (key === 'allergens' && customTrans.allergens_label) return customTrans.allergens_label;
     return staticTexts[key]?.[language] || staticTexts[key]?.[fallbackLang] || staticTexts[key]?.es || '';
   };
-  const getUnavailableText = () => customTrans.unavailable_badge || staticTexts.noResults?.[language] || 'No disponible';
+  const unavailable = { es:'No disponible',en:'Unavailable',fr:'Indisponible',de:'Nicht verfügbar',it:'Non disponibile',pt:'Indisponível',nl:'Niet beschikbaar',zh:'暂不供应',ja:'提供不可',ar:'غير متوفر',ru:'Недоступно',ca:'No disponible',eu:'Erabilgarri ez',gl:'Non dispoñible' };
+  const getUnavailableText = () => customTrans.unavailable_badge || unavailable[language] || unavailable.es;
 
   const filteredCategories = (searchQuery.trim()
     ? categories.map(cat => ({
@@ -198,7 +213,6 @@ export default function MenuClient({ menuData }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${bg}; }
         .qr-root { min-height: 100vh; background: ${bg}; color: ${textPrimary}; font-family: 'Lato', sans-serif; }
@@ -436,7 +450,7 @@ export default function MenuClient({ menuData }) {
                             return src ? (
                               <img key={i} src={src} alt={getAllergenName(a)} title={getAllergenName(a)} className="qr-allergen-mini" />
                             ) : (
-                              <span key={i} className="qr-allergen">{a.trim()}</span>
+                              <span key={i} className="qr-allergen">{getAllergenName(a)}</span>
                             );
                           })}
                           {item.allergens.length > 5 && <span className="qr-allergen-more">+{item.allergens.length - 5}</span>}
@@ -499,7 +513,7 @@ export default function MenuClient({ menuData }) {
                             <span className="qr-allergen-icon-label">{getAllergenName(a)}</span>
                           </div>
                         ) : (
-                          <span key={i} className="qr-modal-allergen">{a.trim()}</span>
+                          <span key={i} className="qr-modal-allergen">{getAllergenName(a)}</span>
                         );
                       })}
                     </div>
@@ -595,7 +609,7 @@ export default function MenuClient({ menuData }) {
                         <div className="qr-info-label">{getText('followUs')}</div>
                         <div className="qr-social-row" style={{marginTop:'8px'}}>
                           {restaurant.website && (
-                            <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="qr-social-link">
+                            <a href={safeWebUrl(restaurant.website) || undefined} target="_blank" rel="noopener noreferrer" className="qr-social-link">
                               🌐 {getText('web')}
                             </a>
                           )}
